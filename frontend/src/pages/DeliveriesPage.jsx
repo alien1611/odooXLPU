@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api/client';
 import useAuth from '../hooks/useAuth';
 import { 
@@ -15,7 +16,8 @@ import {
   ChevronDown,
   ChevronRight,
   ShieldCheck,
-  Calendar
+  Calendar,
+  Scan
 } from 'lucide-react';
 
 export default function DeliveriesPage() {
@@ -197,13 +199,22 @@ export default function DeliveriesPage() {
             Dispatch customer shipments with strict First-Expiry-First-Out (FEFO) batch consumption and automated cost layer relief.
           </p>
         </div>
-        <button
-          onClick={openModal}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded shadow-sm transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          New Delivery Order
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/warehouse/scanner"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded shadow-sm transition-colors"
+          >
+            <Scan className="w-4 h-4 text-indigo-400" />
+            Scanner Mode
+          </Link>
+          <button
+            onClick={openModal}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded shadow-sm transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            New Delivery Order
+          </button>
+        </div>
       </div>
 
       {/* FEFO Allocation Notification Banner */}

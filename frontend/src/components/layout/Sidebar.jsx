@@ -15,11 +15,13 @@ import {
   Scale,
   Warehouse,
   MapPin,
-  Database
+  Database,
+  Scan
 } from 'lucide-react';
 
 const operationItems = [
   { name: 'Dashboard', to: '/', icon: LayoutDashboard },
+  { name: 'Mobile Scanner', to: '/warehouse/scanner', icon: Scan },
   { name: 'Inventory Quants', to: '/inventory', icon: Boxes },
   { name: 'Stock Moves (Ledger)', to: '/moves', icon: ArrowLeftRight },
   { name: 'Lots & FEFO Expiry', to: '/lots', icon: ShieldAlert },

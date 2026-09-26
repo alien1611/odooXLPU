@@ -10,8 +10,11 @@ import {
   CheckCircle2, 
   X,
   ShieldAlert,
-  Boxes
+  Boxes,
+  Printer,
+  Barcode
 } from 'lucide-react';
+import BarcodeLabelModal from '../../components/common/PrintableBarcodeLabel';
 
 export default function ProductsPage() {
   const { isManager } = useAuth();
@@ -26,6 +29,7 @@ export default function ProductsPage() {
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
+  const [labelModal, setLabelModal] = useState({ isOpen: false, product: null });
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState(null);
   const [formData, setFormData] = useState({
@@ -241,6 +245,7 @@ export default function ProductsPage() {
                   <th className="py-2.5 px-4 text-center">Reorder Point</th>
                   <th className="py-2.5 px-4 text-center">Lead Time</th>
                   <th className="py-2.5 px-4 text-right">On Hand</th>
+                  <th className="py-2.5 px-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -291,6 +296,17 @@ export default function ProductsPage() {
                     </td>
                     <td className="py-3 px-4 text-right font-mono font-bold text-slate-900">
                       {parseFloat(p.on_hand_qty || 0)}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => setLabelModal({ isOpen: true, product: p })}
+                        title="Print Product Barcode Label"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium transition-colors border border-slate-200"
+                      >
+                        <Printer className="w-3 h-3 text-slate-600" />
+                        <span>Label</span>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -498,6 +514,22 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
+
+      {/* Printable Barcode Label Modal */}
+      <BarcodeLabelModal
+        isOpen={labelModal.isOpen}
+        onClose={() => setLabelModal({ isOpen: false, product: null })}
+        entityType="product"
+        barcode={labelModal.product?.barcode || labelModal.product?.sku}
+        title={labelModal.product?.name}
+        subtitle={`SKU: ${labelModal.product?.sku}`}
+        details={[
+          { label: 'Category', value: labelModal.product?.category_name || 'Standard' },
+          { label: 'UoM', value: labelModal.product?.uom_code || labelModal.product?.uom_name },
+          { label: 'Tracking', value: labelModal.product?.tracking_type?.toUpperCase() },
+          { label: 'On Hand', value: `${parseFloat(labelModal.product?.on_hand_qty || 0)}` }
+        ]}
+      />
     </div>
   );
 }

@@ -9,8 +9,10 @@ import {
   CheckCircle2, 
   X,
   Warehouse,
-  Barcode
+  Barcode,
+  Printer
 } from 'lucide-react';
+import BarcodeLabelModal from '../../components/common/PrintableBarcodeLabel';
 
 export default function LocationsPage() {
   const { isManager } = useAuth();
@@ -23,6 +25,7 @@ export default function LocationsPage() {
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
+  const [labelModal, setLabelModal] = useState({ isOpen: false, location: null });
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState(null);
   const [formData, setFormData] = useState({
@@ -220,6 +223,7 @@ export default function LocationsPage() {
                   <th className="py-2.5 px-4">Parent Location</th>
                   <th className="py-2.5 px-4">Barcode</th>
                   <th className="py-2.5 px-4 text-right">Status</th>
+                  <th className="py-2.5 px-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -262,6 +266,17 @@ export default function LocationsPage() {
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                         Active
                       </span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => setLabelModal({ isOpen: true, location: loc })}
+                        title="Print Location Bin Barcode Label"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium transition-colors border border-slate-200"
+                      >
+                        <Printer className="w-3 h-3 text-slate-600" />
+                        <span>Bin Label</span>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -411,6 +426,21 @@ export default function LocationsPage() {
           </div>
         </div>
       )}
+
+      {/* Printable Barcode Label Modal */}
+      <BarcodeLabelModal
+        isOpen={labelModal.isOpen}
+        onClose={() => setLabelModal({ isOpen: false, location: null })}
+        entityType="location"
+        barcode={labelModal.location?.barcode || labelModal.location?.code}
+        title={labelModal.location?.name}
+        subtitle={`Location Code: ${labelModal.location?.code}`}
+        details={[
+          { label: 'Warehouse', value: labelModal.location?.warehouse_name || labelModal.location?.warehouse_code },
+          { label: 'Type', value: labelModal.location?.type?.toUpperCase() },
+          { label: 'Barcode', value: labelModal.location?.barcode || labelModal.location?.code }
+        ]}
+      />
     </div>
   );
 }

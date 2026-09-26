@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api/client';
 import useAuth from '../hooks/useAuth';
 import { 
@@ -13,7 +14,8 @@ import {
   TrendingUp,
   AlertTriangle,
   Package,
-  MapPin
+  MapPin,
+  Scan
 } from 'lucide-react';
 
 export default function AdjustmentsPage() {
@@ -161,15 +163,24 @@ export default function AdjustmentsPage() {
             Record physical cycle counts, write off damaged/lost materials, and reconcile stock discrepancies with an immutable audit trail.
           </p>
         </div>
-        {isManager && (
-          <button
-            onClick={openModal}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded shadow-sm transition-colors"
+        <div className="flex items-center gap-2">
+          <Link
+            to="/warehouse/scanner"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded shadow-sm transition-colors"
           >
-            <Plus className="w-4 h-4" />
-            New Physical Adjustment
-          </button>
-        )}
+            <Scan className="w-4 h-4 text-amber-400" />
+            Barcode Cycle Count
+          </Link>
+          {isManager && (
+            <button
+              onClick={openModal}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded shadow-sm transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              New Physical Adjustment
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Success Alert */}

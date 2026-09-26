@@ -104,6 +104,17 @@ async function createLocation({
     throw new AppError(`A location with code "${cleanCode}" already exists in this warehouse.`, 409, 'DUPLICATE_LOCATION');
   }
 
+  // 5b. Unique barcode check if provided
+  const cleanBarcode = (barcode && typeof barcode === 'string' && barcode.trim().length > 0)
+    ? barcode.trim()
+    : null;
+  if (cleanBarcode) {
+    const dupBc = await query('SELECT id, name, code FROM locations WHERE barcode = $1', [cleanBarcode]);
+    if (dupBc.rows.length > 0) {
+      throw new AppError(`A location with barcode "${cleanBarcode}" already exists.`, 409, 'DUPLICATE_BARCODE');
+    }
+  }
+
   const insertSql = `
     INSERT INTO locations (warehouse_id, parent_location_id, code, name, type, barcode, is_active, created_at, updated_at)
     VALUES ($1, $2, $3, $4, $5, $6, TRUE, NOW(), NOW())

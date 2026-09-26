@@ -17,6 +17,7 @@ const auditRoutes = require('./auditLogs');
 const reorderRoutes = require('./reorders');
 const expiryRoutes = require('./expiry');
 const valuationRoutes = require('./valuation');
+const barcodeRoutes = require('./barcodes');
 
 const router = express.Router();
 
@@ -47,6 +48,9 @@ router.use('/audit-logs', auditRoutes);
 router.use('/reorders', reorderRoutes);
 router.use('/expiry', expiryRoutes);
 router.use('/valuation', valuationRoutes);
+
+// Barcode & Warehouse Operations routes (Phase 5)
+router.use('/barcodes', barcodeRoutes);
 
 module.exports = router;
 

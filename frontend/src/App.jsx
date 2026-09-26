@@ -22,6 +22,7 @@ import AdjustmentsPage from './pages/AdjustmentsPage';
 import ReordersPage from './pages/ReordersPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import ScannerPage from './pages/warehouse/ScannerPage';
 
 // Master Data Pages
 import ProductsPage from './pages/master/ProductsPage';
@@ -68,6 +69,8 @@ export default function App() {
             <Route path="transfers" element={<TransfersPage />} />
             <Route path="adjustments" element={<AdjustmentsPage />} />
             <Route path="reorders" element={<ReordersPage />} />
+            <Route path="scanner" element={<ScannerPage />} />
+            <Route path="warehouse/scanner" element={<ScannerPage />} />
             <Route path="settings" element={<SettingsPage />} />
 
             {/* Catch-all 404 */}

@@ -10,8 +10,11 @@ import {
   Building2, 
   Layers, 
   CheckCircle2, 
-  AlertTriangle 
+  AlertTriangle,
+  Printer,
+  Barcode
 } from 'lucide-react';
+import BarcodeLabelModal from '../components/common/PrintableBarcodeLabel';
 
 export default function LotsPage() {
   const [lots, setLots] = useState([]);
@@ -19,6 +22,7 @@ export default function LotsPage() {
   const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [labelModal, setLabelModal] = useState({ isOpen: false, lot: null });
 
   // Filters
   const [riskWindow, setRiskWindow] = useState('all');
@@ -214,25 +218,27 @@ export default function LotsPage() {
             <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200 select-none">
               <tr>
                 <th className="py-2.5 px-4">Lot / Batch Number</th>
+                <th className="py-2.5 px-4">Barcode</th>
                 <th className="py-2.5 px-4">Product Name & SKU</th>
                 <th className="py-2.5 px-4">Storage Location</th>
                 <th className="py-2.5 px-4 text-right">Available Qty</th>
                 <th className="py-2.5 px-4">Expiry Date</th>
                 <th className="py-2.5 px-4 text-center">Days Remaining</th>
                 <th className="py-2.5 px-4">FEFO Risk Classification</th>
+                <th className="py-2.5 px-4 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading && lots.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-slate-400">
+                  <td colSpan="9" className="py-8 text-center text-slate-400">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-blue-500" />
                     Loading active batch expiry records...
                   </td>
                 </tr>
               ) : filteredLots.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-slate-400">
+                  <td colSpan="9" className="py-8 text-center text-slate-400">
                     No active batches found matching the selected expiry criteria.
                   </td>
                 </tr>
@@ -250,6 +256,17 @@ export default function LotsPage() {
                     <tr key={`${l.lot_id}-${l.location_id}`} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-2.5 px-4 font-mono font-bold text-slate-900">
                         {l.lot_number}
+                      </td>
+
+                      <td className="py-2.5 px-4 font-mono text-[11px] text-slate-500">
+                        {l.barcode ? (
+                          <div className="flex items-center gap-1 text-slate-700">
+                            <Barcode className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{l.barcode}</span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 font-mono text-[10px]">{l.lot_number}</span>
+                        )}
                       </td>
 
                       <td className="py-2.5 px-4">
@@ -320,6 +337,18 @@ export default function LotsPage() {
                           </span>
                         )}
                       </td>
+
+                      <td className="py-2.5 px-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => setLabelModal({ isOpen: true, lot: l })}
+                          title="Print Lot Barcode Label"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium transition-colors border border-slate-200"
+                        >
+                          <Printer className="w-3 h-3 text-slate-600" />
+                          <span>Lot Label</span>
+                        </button>
+                      </td>
                     </tr>
                   );
                 })
@@ -328,6 +357,21 @@ export default function LotsPage() {
           </table>
         </div>
       </div>
+
+      {/* Printable Barcode Label Modal */}
+      <BarcodeLabelModal
+        isOpen={labelModal.isOpen}
+        onClose={() => setLabelModal({ isOpen: false, lot: null })}
+        entityType="lot"
+        barcode={labelModal.lot?.barcode || labelModal.lot?.lot_number}
+        title={`Lot: ${labelModal.lot?.lot_number}`}
+        subtitle={`${labelModal.lot?.product_name} (${labelModal.lot?.sku})`}
+        details={[
+          { label: 'Expiry Date', value: labelModal.lot?.expiry_date ? labelModal.lot.expiry_date.substring(0, 10) : 'None' },
+          { label: 'Location', value: labelModal.lot?.location_name || labelModal.lot?.location_code },
+          { label: 'Quantity', value: `${parseFloat(labelModal.lot?.quantity || 0)}` }
+        ]}
+      />
     </div>
   );
 }

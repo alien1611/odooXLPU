@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api/client';
 import useAuth from '../hooks/useAuth';
 import { 
@@ -14,7 +15,8 @@ import {
   Package,
   Layers,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Scan
 } from 'lucide-react';
 
 export default function ReceiptsPage() {
@@ -214,13 +216,22 @@ export default function ReceiptsPage() {
             Receive goods from suppliers, record batches/lots, calculate weighted-average costing, and post immutable stock moves.
           </p>
         </div>
-        <button
-          onClick={openModal}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          New Receipt
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/warehouse/scanner"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded shadow-sm transition-colors"
+          >
+            <Scan className="w-4 h-4 text-blue-400" />
+            Scanner Inbound
+          </Link>
+          <button
+            onClick={openModal}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            New Receipt
+          </button>
+        </div>
       </div>
 
       {/* Success Alert */}

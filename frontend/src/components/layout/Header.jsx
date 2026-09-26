@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../api/client';
 import useAuth from '../../hooks/useAuth';
-import { Warehouse, CheckCircle2, AlertCircle, RefreshCw, LogOut } from 'lucide-react';
+import { Warehouse, CheckCircle2, AlertCircle, RefreshCw, LogOut, Scan } from 'lucide-react';
 
 export default function Header() {
   const { user, logout } = useAuth();
@@ -52,6 +53,16 @@ export default function Header() {
 
       {/* Right: API Health Status & User Profile */}
       <div className="flex items-center gap-3">
+        {/* Mobile Barcode Scanner Floor Terminal Quick Link */}
+        <Link
+          to="/warehouse/scanner"
+          title="Open Warehouse Floor Barcode Scanner"
+          className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded text-xs font-semibold shadow-2xs transition-colors"
+        >
+          <Scan className="w-3.5 h-3.5" />
+          <span>Scanner Station</span>
+        </Link>
+
         {/* Backend API Health Indicator */}
         <button
           onClick={fetchHealth}

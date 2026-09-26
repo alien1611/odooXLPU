@@ -96,6 +96,17 @@ async function createProduct({
     throw new AppError(`A product with SKU "${cleanSku}" already exists.`, 409, 'DUPLICATE_SKU');
   }
 
+  // 3b. Unique barcode check if provided
+  const cleanBarcode = (barcode && typeof barcode === 'string' && barcode.trim().length > 0)
+    ? barcode.trim()
+    : null;
+  if (cleanBarcode) {
+    const dupBc = await query('SELECT id, name, sku FROM products WHERE barcode = $1', [cleanBarcode]);
+    if (dupBc.rows.length > 0) {
+      throw new AppError(`A product with barcode "${cleanBarcode}" already exists.`, 409, 'DUPLICATE_BARCODE');
+    }
+  }
+
   // 4. Validate UoM FK
   if (!uom_id) {
     throw new AppError('uom_id is required.', 400, 'VALIDATION_ERROR');

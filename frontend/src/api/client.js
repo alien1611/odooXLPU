@@ -331,6 +331,19 @@ class ApiClient {
   getValuationLayers(productId) {
     return this.get(`/valuation/layers/${productId}`).then(r => r.data || []);
   }
+
+  // Phase 5 — Barcode Scanning & Warehouse Operations
+  lookupBarcode(code) {
+    return this.get(`/barcodes/lookup?code=${encodeURIComponent(code)}`).then(r => r.data);
+  }
+
+  assignBarcode(payload) {
+    return this.post('/barcodes/assign', payload).then(r => r.data);
+  }
+
+  getLocationInventory(locationId) {
+    return this.get(`/barcodes/location-inventory/${locationId}`).then(r => r.data || []);
+  }
 }
 
 export const api = new ApiClient();
