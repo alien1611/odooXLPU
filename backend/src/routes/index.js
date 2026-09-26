@@ -21,6 +21,8 @@ const barcodeRoutes = require('./barcodes');
 const waveRoutes = require('./waves');
 const replenishmentRoutes = require('./replenishment');
 const crossDockRoutes = require('./crossDock');
+const carrierRoutes = require('./carriers');
+const packageRoutes = require('./packages');
 
 const router = express.Router();
 
@@ -59,6 +61,10 @@ router.use('/barcodes', barcodeRoutes);
 router.use('/waves', waveRoutes);
 router.use('/replenishment', replenishmentRoutes);
 router.use('/cross-dock', crossDockRoutes);
+
+// Shipping, Cartonization & Carrier Integrations (Phase 7)
+router.use('/carriers', carrierRoutes);
+router.use('/packages', packageRoutes);
 
 module.exports = router;
 

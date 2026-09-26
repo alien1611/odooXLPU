@@ -28,6 +28,7 @@ const operationItems = [
   { name: 'Pick Waves', to: '/waves', icon: Layers },
   { name: 'Bin Replenishment', to: '/replenishment', icon: ArrowUpRight },
   { name: 'Cross-Docking', to: '/cross-dock', icon: Zap },
+  { name: 'Shipping & Dispatch', to: '/shipping', icon: Truck },
   { name: 'Inventory Quants', to: '/inventory', icon: Boxes },
   { name: 'Stock Moves (Ledger)', to: '/moves', icon: ArrowLeftRight },
   { name: 'Lots & FEFO Expiry', to: '/lots', icon: ShieldAlert },

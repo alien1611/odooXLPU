@@ -24,8 +24,9 @@ import WavesPage from './pages/WavesPage';
 import ReplenishmentPage from './pages/ReplenishmentPage';
 import CrossDockPage from './pages/CrossDockPage';
 import SettingsPage from './pages/SettingsPage';
-import NotFoundPage from './pages/NotFoundPage';
 import ScannerPage from './pages/warehouse/ScannerPage';
+import ShippingPage from './pages/ShippingPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Master Data Pages
 import ProductsPage from './pages/master/ProductsPage';
@@ -75,6 +76,8 @@ export default function App() {
             <Route path="waves" element={<WavesPage />} />
             <Route path="replenishment" element={<ReplenishmentPage />} />
             <Route path="cross-dock" element={<CrossDockPage />} />
+            <Route path="shipping" element={<ShippingPage />} />
+            <Route path="shipping/packing" element={<ShippingPage />} />
             <Route path="scanner" element={<ScannerPage />} />
             <Route path="warehouse/scanner" element={<ScannerPage />} />
             <Route path="settings" element={<SettingsPage />} />

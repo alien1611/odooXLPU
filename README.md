@@ -170,7 +170,7 @@ The frontend will run at `http://localhost:5173` and the backend at `http://loca
 ## 7. Automated Test Suites
 
 ```bash
-# Run complete test suite (Phases 2 through 6)
+# Run complete test suite (Phases 2 through 7)
 npm test
 
 # Run individual phase suites
@@ -179,6 +179,7 @@ npm run test:phase3 --prefix backend
 npm run test:phase4 --prefix backend
 npm run test:phase5 --prefix backend
 npm run test:phase6 --prefix backend
+npm run test:phase7 --prefix backend
 ```
 
 ---
@@ -191,6 +192,7 @@ npm run test:phase6 --prefix backend
 - [x] **Phase 4:** Consumption-Based Reorder Suggestions & Expiry Risk Analytics ($d \times L + SS$)
 - [x] **Phase 5:** Barcode Scanning & Warehouse Operations Workflow
 - [x] **Phase 6:** Advanced Warehouse Logistics & Wave Management (Multi-Location Pick Waves, Forward Bin Replenishment, Inbound Cross-Docking)
+- [x] **Phase 7:** Shipping & Freight Carrier Integrations (Packing Station, Cartonization, Weight Capture, Packing Slip, Bill of Lading, Carrier Dispatch)
 
 ---
 

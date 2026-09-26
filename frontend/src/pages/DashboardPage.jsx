@@ -16,7 +16,9 @@ import {
   Clock,
   Boxes,
   ArrowUpRight,
-  Zap
+  Zap,
+  Truck,
+  Send
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -28,6 +30,13 @@ export default function DashboardPage() {
   const [waves, setWaves] = useState([]);
   const [replenishments, setReplenishments] = useState([]);
   const [crossDockAlerts, setCrossDockAlerts] = useState([]);
+  const [shippingStats, setShippingStats] = useState({
+    deliveries_ready_to_pack: 0,
+    packages_being_packed: 0,
+    packed_deliveries: 0,
+    ready_to_dispatch: 0,
+    dispatched_today: 0
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -35,14 +44,15 @@ export default function DashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const [valData, reorderData, expiryData, movesData, wavesData, replenData, xdockData] = await Promise.all([
+      const [valData, reorderData, expiryData, movesData, wavesData, replenData, xdockData, shipData] = await Promise.all([
         api.getValuationSummary(),
         api.getReorderSuggestions({ status: 'pending' }),
         api.getExpirySummary(),
         api.getMoves({ limit: 6 }),
         api.getWaves().catch(() => []),
         api.getReplenishments().catch(() => []),
-        api.getCrossDockAlerts().catch(() => [])
+        api.getCrossDockAlerts().catch(() => []),
+        api.getShippingStats().catch(() => ({}))
       ]);
       setValuation(valData);
       setReorders(reorderData);
@@ -51,6 +61,7 @@ export default function DashboardPage() {
       setWaves(wavesData);
       setReplenishments(replenData);
       setCrossDockAlerts(xdockData);
+      setShippingStats(shipData || {});
     } catch (err) {
       setError(err.message || 'Failed to load live operational KPIs.');
     } finally {
@@ -285,6 +296,106 @@ export default function DashboardPage() {
               <span className="text-slate-400">Needs pick face refill</span>
               <Link to="/replenishment" className="text-amber-600 hover:text-amber-800 font-medium">
                 Configure &rarr;
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Shipping, Cartonization & Carrier Dispatch (Phase 7) */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+          <div className="flex items-center gap-2">
+            <Truck className="w-4 h-4 text-indigo-600" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+              Shipping & Freight Carrier Operations
+            </h2>
+          </div>
+          <span className="text-[11px] text-slate-400 font-medium">Phase 7 Packing & Dispatch</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* Shipping KPI 1: Deliveries Ready to Pack */}
+          <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-blue-300 transition-colors">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-xs font-medium">Ready to Pack</span>
+              <Package className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="mt-1.5 text-xl font-bold text-slate-900 font-mono">
+              {loading ? <span className="text-slate-300">...</span> : (shippingStats.deliveries_ready_to_pack || 0)}
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px]">
+              <span className="text-slate-400">Picked deliveries</span>
+              <Link to="/shipping" className="text-blue-600 hover:text-blue-800 font-medium">
+                Pack &rarr;
+              </Link>
+            </div>
+          </div>
+
+          {/* Shipping KPI 2: Packages Being Packed */}
+          <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-amber-300 transition-colors">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-xs font-medium">Being Packed</span>
+              <Boxes className="w-4 h-4 text-amber-500" />
+            </div>
+            <div className="mt-1.5 text-xl font-bold font-mono text-slate-900">
+              {loading ? <span className="text-slate-300">...</span> : (shippingStats.packages_being_packed || 0)}
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px]">
+              <span className="text-slate-400">Open cartons</span>
+              <Link to="/shipping" className="text-amber-600 hover:text-amber-800 font-medium">
+                Station &rarr;
+              </Link>
+            </div>
+          </div>
+
+          {/* Shipping KPI 3: Packed Deliveries */}
+          <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-emerald-300 transition-colors">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-xs font-medium">Packed Deliveries</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            </div>
+            <div className="mt-1.5 text-xl font-bold font-mono text-emerald-700">
+              {loading ? <span className="text-slate-300">...</span> : (shippingStats.packed_deliveries || 0)}
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px]">
+              <span className="text-slate-400">Cartons sealed</span>
+              <Link to="/shipping" className="text-emerald-600 hover:text-emerald-800 font-medium">
+                Review &rarr;
+              </Link>
+            </div>
+          </div>
+
+          {/* Shipping KPI 4: Ready to Dispatch */}
+          <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-indigo-300 transition-colors">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-xs font-medium">Ready to Dispatch</span>
+              <Send className="w-4 h-4 text-indigo-600" />
+            </div>
+            <div className="mt-1.5 text-xl font-bold font-mono text-indigo-700">
+              {loading ? <span className="text-slate-300">...</span> : (shippingStats.ready_to_dispatch || 0)}
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px]">
+              <span className="text-slate-400">Carrier assigned</span>
+              <Link to="/shipping" className="text-indigo-600 hover:text-indigo-800 font-medium">
+                Ship &rarr;
+              </Link>
+            </div>
+          </div>
+
+          {/* Shipping KPI 5: Dispatched Today */}
+          <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-slate-300 transition-colors">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-xs font-medium">Dispatched Today</span>
+              <Truck className="w-4 h-4 text-slate-700" />
+            </div>
+            <div className="mt-1.5 text-xl font-bold font-mono text-slate-900">
+              {loading ? <span className="text-slate-300">...</span> : (shippingStats.dispatched_today || 0)}
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px]">
+              <span className="text-slate-400">Outbound freight</span>
+              <Link to="/shipping" className="text-slate-600 hover:text-slate-800 font-medium">
+                Manifest &rarr;
               </Link>
             </div>
           </div>

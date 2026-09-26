@@ -436,6 +436,88 @@ class ApiClient {
   dismissCrossDock(id) {
     return this.post(`/cross-dock/${id}/dismiss`, {}).then(r => r.data);
   }
+
+  // Phase 7 — Shipping, Cartonization & Carrier Integrations
+  getCarriers(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.active_only) searchParams.append('active_only', params.active_only);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/carriers?${qs}` : '/carriers').then(r => r.data || []);
+  }
+
+  createCarrier(payload) {
+    return this.post('/carriers', payload).then(r => r.data);
+  }
+
+  updateCarrier(id, payload) {
+    return this.patch(`/carriers/${id}`, payload).then(r => r.data);
+  }
+
+  getReadyDeliveries(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.warehouse_id) searchParams.append('warehouse_id', params.warehouse_id);
+    if (params.search) searchParams.append('search', params.search);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/packages/ready-deliveries?${qs}` : '/packages/ready-deliveries').then(r => r.data || []);
+  }
+
+  getShippingStats() {
+    return this.get('/packages/stats').then(r => r.data || {});
+  }
+
+  getPackages(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.delivery_id) searchParams.append('delivery_id', params.delivery_id);
+    if (params.warehouse_id) searchParams.append('warehouse_id', params.warehouse_id);
+    if (params.status) searchParams.append('status', params.status);
+    if (params.carrier_id) searchParams.append('carrier_id', params.carrier_id);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/packages?${qs}` : '/packages').then(r => r.data || []);
+  }
+
+  getPackageById(id) {
+    return this.get(`/packages/${id}`).then(r => r.data);
+  }
+
+  createPackage(payload) {
+    return this.post('/packages', payload).then(r => r.data);
+  }
+
+  addPackageLine(packageId, payload) {
+    return this.post(`/packages/${packageId}/lines`, payload).then(r => r.data);
+  }
+
+  updatePackageLine(packageId, lineId, payload) {
+    return this.patch(`/packages/${packageId}/lines/${lineId}`, payload).then(r => r.data);
+  }
+
+  removePackageLine(packageId, lineId) {
+    return this.delete(`/packages/${packageId}/lines/${lineId}`);
+  }
+
+  packPackage(packageId, payload = {}) {
+    return this.post(`/packages/${packageId}/pack`, payload).then(r => r.data);
+  }
+
+  cancelPackage(packageId) {
+    return this.post(`/packages/${packageId}/cancel`, {}).then(r => r.data);
+  }
+
+  assignCarrier(packageId, payload) {
+    return this.post(`/packages/${packageId}/assign-carrier`, payload).then(r => r.data);
+  }
+
+  dispatchPackage(packageId, payload = {}) {
+    return this.post(`/packages/${packageId}/dispatch`, payload).then(r => r.data);
+  }
+
+  getPackingSlip(packageId) {
+    return this.get(`/packages/${packageId}/packing-slip`).then(r => r.data);
+  }
+
+  getBillOfLading(packageId) {
+    return this.get(`/packages/${packageId}/bill-of-lading`).then(r => r.data);
+  }
 }
 
 export const api = new ApiClient();
