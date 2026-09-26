@@ -154,8 +154,8 @@ async function createPackage({
       throw new AppError('Cannot create a package for a cancelled delivery.', 400, 'INVALID_STATUS');
     }
 
-    const whId = warehouse_id ? parseInt(warehouse_id, 10) : delivery.source_warehouse_id;
-    if (whId !== delivery.source_warehouse_id) {
+    const whId = warehouse_id ? parseInt(warehouse_id, 10) : parseInt(delivery.source_warehouse_id, 10);
+    if (whId !== parseInt(delivery.source_warehouse_id, 10)) {
       throw new AppError('Warehouse ID does not match delivery source warehouse.', 400, 'WAREHOUSE_MISMATCH');
     }
 
@@ -446,10 +446,10 @@ async function addPackageLine(packageId, { delivery_line_id, product_id, lot_id 
     if (dlRes.rows.length === 0) throw new AppError('Delivery line not found.', 404, 'NOT_FOUND');
     const delivLine = dlRes.rows[0];
 
-    if (delivLine.delivery_id !== pkg.delivery_id) {
+    if (parseInt(delivLine.delivery_id, 10) !== parseInt(pkg.delivery_id, 10)) {
       throw new AppError('Delivery line does not belong to this package delivery.', 400, 'DELIVERY_MISMATCH');
     }
-    if (delivLine.product_id !== prId) {
+    if (parseInt(delivLine.product_id, 10) !== parseInt(prId, 10)) {
       throw new AppError('Product ID does not match delivery line product.', 400, 'PRODUCT_MISMATCH');
     }
 

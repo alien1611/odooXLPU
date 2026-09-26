@@ -71,7 +71,7 @@ async function createStockMove(client, {
     ) VALUES (
       $1, $2, $3, $4, $5,
       $6, $7, $8, $9, $10, $11,
-      $12, NOW(), CASE WHEN $9 = 'done' THEN NOW() ELSE NULL END
+      $12, NOW(), CASE WHEN $9::varchar = 'done' THEN NOW() ELSE NULL END
     )
     RETURNING 
       id, reference, product_id, lot_id, src_location_id, dest_location_id,

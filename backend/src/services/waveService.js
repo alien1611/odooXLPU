@@ -54,7 +54,7 @@ async function createWave({ warehouse_id, notes = null, delivery_ids = [] }, use
         }
         const deliv = dRes.rows[0];
 
-        if (deliv.source_warehouse_id !== whId) {
+        if (parseInt(deliv.source_warehouse_id, 10) !== parseInt(whId, 10)) {
           throw new AppError(
             `Delivery "${deliv.reference}" belongs to another warehouse and cannot be added to this wave.`,
             400,
@@ -378,13 +378,13 @@ async function addDeliveriesToWave(waveId, deliveryIds = [], userId, ipAddress =
       if (dRes.rows.length === 0) throw new AppError(`Delivery ID ${dId} not found.`, 404, 'NOT_FOUND');
       const deliv = dRes.rows[0];
 
-      if (deliv.source_warehouse_id !== wave.warehouse_id) {
+      if (parseInt(deliv.source_warehouse_id, 10) !== parseInt(wave.warehouse_id, 10)) {
         throw new AppError(`Delivery "${deliv.reference}" belongs to another warehouse.`, 400, 'WAREHOUSE_MISMATCH');
       }
       if (deliv.status === 'done' || deliv.status === 'cancelled') {
         throw new AppError(`Delivery "${deliv.reference}" is already ${deliv.status}.`, 400, 'INVALID_STATUS');
       }
-      if (deliv.wave_id && deliv.wave_id !== wave.id) {
+      if (deliv.wave_id && parseInt(deliv.wave_id, 10) !== parseInt(wave.id, 10)) {
         throw new AppError(`Delivery "${deliv.reference}" is already in wave ID ${deliv.wave_id}.`, 409, 'ALREADY_ASSIGNED');
       }
 

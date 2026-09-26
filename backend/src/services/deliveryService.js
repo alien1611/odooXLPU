@@ -106,7 +106,7 @@ async function createDelivery({
       if (locRes.rows.length === 0) {
         throw new AppError(`Line ${i + 1}: Location ID ${locId} not found.`, 400, 'INVALID_FOREIGN_KEY');
       }
-      if (locRes.rows[0].warehouse_id !== parseInt(source_warehouse_id, 10)) {
+      if (parseInt(locRes.rows[0].warehouse_id, 10) !== parseInt(source_warehouse_id, 10)) {
         throw new AppError(
           `Line ${i + 1}: Location "${locRes.rows[0].code}" does not belong to source warehouse.`,
           400,

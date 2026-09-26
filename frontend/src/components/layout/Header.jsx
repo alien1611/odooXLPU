@@ -92,17 +92,21 @@ export default function Header() {
 
         {/* User Identity & Logout */}
         <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
-          <div className="w-7 h-7 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-bold font-mono">
+          <Link
+            to="/settings"
+            title="Open System Architecture & Settings"
+            className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center text-xs font-bold font-mono transition-colors"
+          >
             {getInitials(user?.name)}
-          </div>
-          <div className="hidden sm:block text-left">
+          </Link>
+          <Link to="/settings" className="hidden sm:block text-left hover:opacity-80 transition-opacity" title="Open System Architecture & Settings">
             <div className="text-xs font-semibold text-slate-900 leading-none truncate max-w-[130px]">
               {user?.name || 'Operator'}
             </div>
             <div className="text-[10px] text-slate-500 font-mono mt-0.5">
               {user?.role || 'staff'}
             </div>
-          </div>
+          </Link>
 
           <button
             onClick={logout}

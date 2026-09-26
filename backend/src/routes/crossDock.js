@@ -23,6 +23,23 @@ router.get('/', async (req, res, next) => {
 });
 
 /**
+ * GET /api/cross-dock/alerts - Alias to list cross-docking alerts
+ */
+router.get('/alerts', async (req, res, next) => {
+  try {
+    const { warehouse_id, status } = req.query;
+    const alerts = await crossDockService.listCrossDockAlerts({ warehouse_id, status });
+    res.json({
+      success: true,
+      count: alerts.length,
+      data: alerts
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * POST /api/cross-dock/scan - Scan and detect cross-docking opportunities
  */
 router.post('/scan', async (req, res, next) => {
@@ -43,6 +60,9 @@ router.post('/scan', async (req, res, next) => {
  */
 router.get('/:id', async (req, res, next) => {
   try {
+    if (isNaN(parseInt(req.params.id, 10))) {
+      return res.status(404).json({ success: false, error: { message: 'Alert not found', code: 'NOT_FOUND' } });
+    }
     const alert = await crossDockService.getCrossDockAlertById(req.params.id);
     res.json({
       success: true,

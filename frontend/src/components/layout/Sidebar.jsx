@@ -19,7 +19,9 @@ import {
   Scan,
   Layers,
   ArrowUpRight,
-  Zap
+  Zap,
+  Truck,
+  Settings
 } from 'lucide-react';
 
 const operationItems = [
@@ -45,6 +47,7 @@ const masterDataItems = [
   { name: 'Units of Measure', to: '/uom', icon: Scale },
   { name: 'Warehouses', to: '/warehouses', icon: Warehouse },
   { name: 'Locations', to: '/locations', icon: MapPin },
+  { name: 'System Settings', to: '/settings', icon: Settings },
 ];
 
 export default function Sidebar() {

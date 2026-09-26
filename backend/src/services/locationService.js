@@ -106,7 +106,7 @@ async function createLocation({
       throw new AppError('Parent location not found. Invalid foreign key reference.', 400, 'INVALID_FOREIGN_KEY');
     }
     // Verify parent is in the same warehouse
-    if (parentCheck.rows[0].warehouse_id !== parseInt(warehouse_id, 10)) {
+    if (parseInt(parentCheck.rows[0].warehouse_id, 10) !== parseInt(warehouse_id, 10)) {
       throw new AppError('Parent location must belong to the same warehouse facility.', 400, 'VALIDATION_ERROR');
     }
     validParentId = parent_location_id;
