@@ -14,6 +14,9 @@ const quantRoutes = require('./quants');
 const moveRoutes = require('./moves');
 const lotRoutes = require('./lots');
 const auditRoutes = require('./auditLogs');
+const reorderRoutes = require('./reorders');
+const expiryRoutes = require('./expiry');
+const valuationRoutes = require('./valuation');
 
 const router = express.Router();
 
@@ -40,4 +43,10 @@ router.use('/moves', moveRoutes);
 router.use('/lots', lotRoutes);
 router.use('/audit-logs', auditRoutes);
 
+// Intelligence & Analytics routes (Phase 4)
+router.use('/reorders', reorderRoutes);
+router.use('/expiry', expiryRoutes);
+router.use('/valuation', valuationRoutes);
+
 module.exports = router;
+

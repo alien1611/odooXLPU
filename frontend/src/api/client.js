@@ -263,6 +263,74 @@ class ApiClient {
     const qs = searchParams.toString();
     return this.get(qs ? `/audit-logs?${qs}` : '/audit-logs').then(r => r.data || []);
   }
+
+  // Phase 4 — Reorder Intelligence, Expiry Risk & Inventory Valuation
+  getReorderSuggestions(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.status) searchParams.append('status', params.status);
+    if (params.warehouse_id) searchParams.append('warehouse_id', params.warehouse_id);
+    if (params.product_id) searchParams.append('product_id', params.product_id);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/reorders/suggestions?${qs}` : '/reorders/suggestions').then(r => r.data || []);
+  }
+
+  getReorderAnalysis(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.warehouse_id) searchParams.append('warehouse_id', params.warehouse_id);
+    if (params.product_id) searchParams.append('product_id', params.product_id);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/reorders/analysis?${qs}` : '/reorders/analysis').then(r => r.data || []);
+  }
+
+  generateReorderSuggestions(payload = {}) {
+    return this.post('/reorders/generate', payload).then(r => r.data);
+  }
+
+  approveReorderSuggestion(id) {
+    return this.post(`/reorders/${id}/approve`, {}).then(r => r.data);
+  }
+
+  dismissReorderSuggestion(id) {
+    return this.post(`/reorders/${id}/dismiss`, {}).then(r => r.data);
+  }
+
+  getExpiryRisk(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.risk_window) searchParams.append('risk_window', params.risk_window);
+    if (params.warehouse_id) searchParams.append('warehouse_id', params.warehouse_id);
+    if (params.location_id) searchParams.append('location_id', params.location_id);
+    if (params.product_id) searchParams.append('product_id', params.product_id);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/expiry/risk?${qs}` : '/expiry/risk').then(r => r.data || []);
+  }
+
+  getExpirySummary(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.warehouse_id) searchParams.append('warehouse_id', params.warehouse_id);
+    if (params.location_id) searchParams.append('location_id', params.location_id);
+    if (params.product_id) searchParams.append('product_id', params.product_id);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/expiry/summary?${qs}` : '/expiry/summary').then(r => r.data || {});
+  }
+
+  getValuationSummary(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.warehouse_id) searchParams.append('warehouse_id', params.warehouse_id);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/valuation/summary?${qs}` : '/valuation/summary').then(r => r.data || {});
+  }
+
+  getProductValuation(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.category_id) searchParams.append('category_id', params.category_id);
+    if (params.search) searchParams.append('search', params.search);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/valuation/products?${qs}` : '/valuation/products').then(r => r.data || []);
+  }
+
+  getValuationLayers(productId) {
+    return this.get(`/valuation/layers/${productId}`).then(r => r.data || []);
+  }
 }
 
 export const api = new ApiClient();
