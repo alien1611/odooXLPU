@@ -10,6 +10,7 @@ import {
   X,
   Layers
 } from 'lucide-react';
+import { PageHeader, FlatCard, Button, Badge, Modal, Input, Select, EmptyState } from '../../components/ui';
 
 export default function CategoriesPage() {
   const { isManager } = useAuth();
@@ -71,124 +72,118 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <FolderTree className="w-5 h-5 text-blue-600" />
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Product Categories</h1>
-            <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-mono text-slate-600">
-              {categories.length}
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Hierarchical taxonomy for organizing warehouse catalog and inventory lines
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={fetchCategories}
-            title="Refresh List"
-            className="p-2 rounded border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-
-          {isManager && (
-            <button
-              onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 shadow-sm transition-colors"
+      <PageHeader
+        title="Product Categories"
+        description="Hierarchical taxonomy for organizing warehouse catalog and inventory lines"
+        badge={categories.length}
+        actions={
+          <div className="flex items-center gap-2.5">
+            <Button
+              variant="secondary"
+              icon={RefreshCw}
+              onClick={fetchCategories}
+              disabled={loading}
+              className={loading ? '[&>svg]:animate-spin text-amber-600' : ''}
             >
-              <Plus className="w-4 h-4" />
-              New Category
-            </button>
-          )}
-        </div>
-      </div>
+              Refresh
+            </Button>
+
+            {isManager && (
+              <Button
+                variant="primary"
+                icon={Plus}
+                onClick={() => setShowModal(true)}
+              >
+                New Category
+              </Button>
+            )}
+          </div>
+        }
+      />
 
       {/* Success Notification */}
       {successMsg && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded text-xs text-emerald-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+        <div className="p-4 bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{successMsg}</span>
           </div>
-          <button onClick={() => setSuccessMsg(null)}>
-            <X className="w-3.5 h-3.5 text-emerald-600 hover:text-emerald-800" />
+          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 hover:text-emerald-800 p-1">
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Error Notification */}
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-800 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+        <div className="p-4 bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-2xl text-xs text-rose-800 dark:text-rose-300 flex items-center gap-2.5">
+          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Table Card */}
-      <div className="bg-white rounded border border-slate-200 shadow-sm overflow-hidden">
+      <FlatCard className="overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-xs text-slate-500">
-            <RefreshCw className="w-4 h-4 text-blue-600 animate-spin mx-auto mb-2" />
+          <div className="p-12 text-center text-xs text-slate-500">
+            <RefreshCw className="w-5 h-5 text-amber-600 animate-spin mx-auto mb-3" />
             Loading category taxonomy...
           </div>
         ) : categories.length === 0 ? (
-          <div className="p-12 text-center">
-            <Layers className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-            <h3 className="text-sm font-semibold text-slate-800">No categories found</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">
-              Get started by establishing product categories to group inventory items and manage taxonomy.
-            </p>
-            {isManager && (
-              <button
-                onClick={() => setShowModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-blue-600 text-white text-xs font-medium hover:bg-blue-700"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Create First Category
-              </button>
-            )}
-          </div>
+          <EmptyState
+            icon={Layers}
+            title="No categories found"
+            description="Get started by establishing product categories to group inventory items and manage taxonomy."
+            action={
+              isManager && (
+                <Button
+                  variant="primary"
+                  icon={Plus}
+                  onClick={() => setShowModal(true)}
+                >
+                  Create First Category
+                </Button>
+              )
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px]">
+              <thead className="bg-slate-50/70 dark:bg-slate-900/60 border-b border-slate-100 dark:border-slate-800/80 text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
                 <tr>
-                  <th className="py-2.5 px-4">Category Name</th>
-                  <th className="py-2.5 px-4">Parent Category</th>
-                  <th className="py-2.5 px-4">Description</th>
-                  <th className="py-2.5 px-4 text-center">Product Count</th>
-                  <th className="py-2.5 px-4 text-right">Created Date</th>
+                  <th className="py-3 px-5">Category Name</th>
+                  <th className="py-3 px-5">Parent Category</th>
+                  <th className="py-3 px-5">Description</th>
+                  <th className="py-3 px-5 text-center">Product Count</th>
+                  <th className="py-3 px-5 text-right">Created Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {categories.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 font-semibold text-slate-900">
+                  <tr key={c.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                    <td className="py-3.5 px-5 font-medium text-slate-900 dark:text-white">
                       {c.name}
                     </td>
-                    <td className="py-3 px-4 text-slate-600">
+                    <td className="py-3.5 px-5 text-slate-600 dark:text-slate-300">
                       {c.parent_name ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[11px]">
+                        <Badge variant="neutral" size="sm">
                           {c.parent_name}
-                        </span>
+                        </Badge>
                       ) : (
                         <span className="text-slate-400 italic">None (Root)</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-slate-500 max-w-xs truncate">
+                    <td className="py-3.5 px-5 text-slate-500 dark:text-slate-400 max-w-xs truncate">
                       {c.description || '—'}
                     </td>
-                    <td className="py-3 px-4 text-center font-mono">
-                      <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[11px] font-semibold">
+                    <td className="py-3.5 px-5 text-center font-mono">
+                      <Badge variant="amber" size="sm">
                         {c.product_count}
-                      </span>
+                      </Badge>
                     </td>
-                    <td className="py-3 px-4 text-right font-mono text-[11px] text-slate-400">
+                    <td className="py-3.5 px-5 text-right font-mono text-[11px] text-slate-400">
                       {new Date(c.created_at).toLocaleDateString()}
                     </td>
                   </tr>
@@ -197,95 +192,83 @@ export default function CategoriesPage() {
             </table>
           </div>
         )}
-      </div>
+      </FlatCard>
 
       {/* Create Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-            <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-900">New Product Category</h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="New Product Category"
+      >
+        <form onSubmit={handleCreate} className="space-y-4">
+          {modalError && (
+            <div className="p-3 bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+              <span>{modalError}</span>
             </div>
+          )}
 
-            <form onSubmit={handleCreate} className="p-5 space-y-4">
-              {modalError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                  <span>{modalError}</span>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Category Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g. Raw Materials, Electronics, Perishables"
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Parent Category (Optional)
-                </label>
-                <select
-                  value={formData.parent_id}
-                  onChange={(e) => setFormData({ ...formData, parent_id: e.target.value })}
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-600 bg-white"
-                >
-                  <option value="">— None (Top Level) —</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Catalog scope and handling notes..."
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-600"
-                />
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-3 py-1.5 border border-slate-200 rounded text-xs text-slate-600 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={modalLoading}
-                  className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-500 disabled:opacity-50"
-                >
-                  {modalLoading ? 'Saving...' : 'Create Category'}
-                </button>
-              </div>
-            </form>
+          <div>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Category Name *
+            </label>
+            <Input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g. Raw Materials, Electronics, Perishables"
+            />
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Parent Category (Optional)
+            </label>
+            <Select
+              value={formData.parent_id}
+              onChange={(e) => setFormData({ ...formData, parent_id: e.target.value })}
+            >
+              <option value="">— None (Top Level) —</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Description
+            </label>
+            <textarea
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Catalog scope and handling notes..."
+              className="w-full px-4 py-2.5 text-xs bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all resize-none"
+            />
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-end gap-2.5">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={modalLoading}
+            >
+              {modalLoading ? 'Saving...' : 'Create Category'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

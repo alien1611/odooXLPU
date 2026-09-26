@@ -1,5 +1,6 @@
 import React from 'react';
 import { Printer, X, Tag, MapPin, ShieldAlert } from 'lucide-react';
+import { Button, Badge } from '../ui';
 
 // Standard Code 128 Pattern Table (indices 0 to 106)
 const CODE128_PATTERNS = [
@@ -100,20 +101,20 @@ export function PrintableBarcodeLabel({
     switch (entityType) {
       case 'product':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-mono text-[10px] font-bold uppercase tracking-wider">
-            <Tag className="w-3 h-3" /> Product / Item
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono text-[10px] font-medium uppercase tracking-wider">
+            <Tag className="w-3 h-3 text-amber-600" /> Item
           </span>
         );
       case 'location':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono text-[10px] font-bold uppercase tracking-wider">
-            <MapPin className="w-3 h-3" /> Bin Location
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono text-[10px] font-medium uppercase tracking-wider">
+            <MapPin className="w-3 h-3 text-amber-600" /> Bin
           </span>
         );
       case 'lot':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-mono text-[10px] font-bold uppercase tracking-wider">
-            <ShieldAlert className="w-3 h-3" /> Lot Batch / FEFO
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono text-[10px] font-medium uppercase tracking-wider">
+            <ShieldAlert className="w-3 h-3 text-amber-600" /> Lot
           </span>
         );
       default:
@@ -122,41 +123,41 @@ export function PrintableBarcodeLabel({
   };
 
   return (
-    <div className="printable-label w-full max-w-sm bg-white border-2 border-slate-900 rounded p-4 shadow-sm flex flex-col justify-between text-slate-900">
+    <div className="printable-label w-full max-w-sm bg-white border border-slate-300 rounded-2xl p-5 shadow-sm flex flex-col justify-between text-slate-900">
       {/* Header with facility & badge */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-        <span className="font-mono text-[11px] font-bold tracking-widest text-slate-600 uppercase">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <span className="font-mono text-[11px] font-semibold tracking-widest text-slate-400 uppercase">
           STOCKYARD WMS
         </span>
         {getBadge()}
       </div>
 
       {/* Main entity info */}
-      <div className="py-2.5">
-        <h3 className="font-bold text-sm text-slate-950 leading-tight truncate" title={title}>
+      <div className="py-3">
+        <h3 className="font-semibold text-sm text-slate-900 leading-tight truncate" title={title}>
           {title}
         </h3>
         {subtitle && (
-          <p className="text-xs text-slate-600 font-medium font-mono mt-0.5 truncate">
+          <p className="text-xs text-slate-500 font-medium font-mono mt-1 truncate">
             {subtitle}
           </p>
         )}
       </div>
 
       {/* Barcode graphic */}
-      <div className="py-2 bg-slate-50 border border-dashed border-slate-200 rounded flex flex-col items-center justify-center my-1 px-2">
+      <div className="py-3 bg-slate-50/70 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center my-2 px-3">
         <BarcodeSvg value={barcode || title} height={46} moduleWidth={1.8} />
       </div>
 
       {/* Key-Value Details */}
       {details.length > 0 && (
-        <div className="pt-2 border-t border-slate-200 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
+        <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-x-3 gap-y-2 text-[11px]">
           {details.map((d, idx) => (
             <div key={idx} className="truncate">
-              <span className="text-slate-500 font-medium uppercase text-[9px] block">
+              <span className="text-slate-400 font-medium uppercase text-[9px] block">
                 {d.label}
               </span>
-              <span className="font-mono font-semibold text-slate-900 truncate block">
+              <span className="font-mono font-medium text-slate-800 truncate block">
                 {d.value || '—'}
               </span>
             </div>
@@ -186,7 +187,7 @@ export default function BarcodeLabelModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-md flex items-center justify-center p-4">
       {/* Print-specific style block */}
       <style>{`
         @media print {
@@ -213,23 +214,25 @@ export default function BarcodeLabelModal({
         }
       `}</style>
 
-      <div className="bg-white rounded-lg border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Modal Header */}
-        <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between no-print">
-          <div className="flex items-center gap-2">
-            <Printer className="w-4 h-4 text-blue-600" />
-            <h3 className="text-sm font-semibold text-slate-900">Printable Warehouse Label</h3>
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between no-print">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center">
+              <Printer className="w-4 h-4" />
+            </div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Printable Warehouse Label</h3>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Modal Body / Label Preview */}
-        <div className="p-6 flex flex-col items-center justify-center bg-slate-100/60">
+        <div className="p-8 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-950/40">
           <div id="printable-label-container" className="w-full flex justify-center">
             <PrintableBarcodeLabel
               entityType={entityType}
@@ -239,28 +242,28 @@ export default function BarcodeLabelModal({
               details={details}
             />
           </div>
-          <p className="text-[11px] text-slate-500 mt-4 text-center no-print">
+          <p className="text-[11px] text-slate-400 mt-4 text-center no-print">
             Optimized for thermal label printers (3"x2" and 4"x2") and standard laser sheets.
           </p>
         </div>
 
         {/* Modal Footer / Actions */}
-        <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2 no-print">
-          <button
+        <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-end gap-2.5 no-print">
+          <Button
             type="button"
+            variant="secondary"
             onClick={onClose}
-            className="px-3 py-1.5 border border-slate-300 rounded text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
           >
             Close
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="primary"
+            icon={Printer}
             onClick={handlePrint}
-            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors"
           >
-            <Printer className="w-3.5 h-3.5" />
             Print Barcode Label
-          </button>
+          </Button>
         </div>
       </div>
     </div>

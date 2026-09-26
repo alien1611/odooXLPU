@@ -10,15 +10,20 @@ import {
   AlertCircle, 
   CheckCircle2, 
   X,
-  Building2,
-  Package,
-  Layers,
   ChevronDown,
   ChevronRight,
   ShieldCheck,
-  Calendar,
-  Scan
+  Scan,
+  Package
 } from 'lucide-react';
+import PageHeader from '../components/ui/PageHeader';
+import FlatCard from '../components/ui/FlatCard';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import Modal from '../components/ui/Modal';
+import EmptyState from '../components/ui/EmptyState';
 
 export default function DeliveriesPage() {
   const { user } = useAuth();
@@ -187,58 +192,47 @@ export default function DeliveriesPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <ArrowUpFromLine className="w-5 h-5 text-indigo-600" />
-            Outbound Deliveries (FEFO Engine)
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Dispatch customer shipments with strict First-Expiry-First-Out (FEFO) batch consumption and automated cost layer relief.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            to="/warehouse/scanner"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded shadow-sm transition-colors"
-          >
-            <Scan className="w-4 h-4 text-indigo-400" />
-            Scanner Mode
-          </Link>
-          <button
-            onClick={openModal}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded shadow-sm transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            New Delivery Order
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Outbound Deliveries"
+        subtitle="Dispatch customer shipments with strict First-Expiry-First-Out (FEFO) batch consumption and automated cost layer relief."
+        actions={
+          <div className="flex items-center gap-2.5">
+            <Link to="/warehouse/scanner">
+              <Button variant="secondary" size="sm" icon={Scan}>
+                Scanner Mode
+              </Button>
+            </Link>
+            <Button variant="primary" size="sm" onClick={openModal} icon={Plus}>
+              New Delivery Order
+            </Button>
+          </div>
+        }
+      />
 
       {/* FEFO Allocation Notification Banner */}
       {fefoResult && (
-        <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-lg shadow-xs space-y-2 animate-in fade-in">
+        <div className="p-5 bg-amber-50/70 border border-amber-200/80 rounded-2xl shadow-xs space-y-3 animate-in fade-in">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 font-semibold text-xs text-indigo-900">
-              <ShieldCheck className="w-4 h-4 text-indigo-600" />
+            <div className="flex items-center gap-2 font-semibold text-xs text-amber-900">
+              <ShieldCheck className="w-4 h-4 text-amber-600" />
               <span>FEFO Consumption Breakdown — {fefoResult.reference} ({fefoResult.customer})</span>
             </div>
             <button 
               onClick={() => setFefoResult(null)}
-              className="text-indigo-400 hover:text-indigo-700"
+              className="text-amber-500 hover:text-amber-800"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1">
             {fefoResult.allocations.map((a, i) => (
-              <div key={i} className="bg-white p-2.5 rounded border border-indigo-100 text-[11px] shadow-2xs">
-                <div className="font-semibold text-slate-800">{a.productName || a.sku}</div>
-                <div className="text-indigo-700 font-mono mt-0.5">Lot: {a.lotNumber}</div>
-                <div className="text-slate-500 flex justify-between mt-1 pt-1 border-t border-slate-100">
-                  <span>Consumed: <strong className="text-slate-800">{a.quantity}</strong></span>
+              <div key={i} className="bg-white p-3.5 rounded-xl border border-black/[0.06] text-xs shadow-2xs">
+                <div className="font-semibold text-neutral-900">{a.productName || a.sku}</div>
+                <div className="text-amber-600 font-mono mt-0.5">Lot: {a.lotNumber}</div>
+                <div className="text-neutral-500 flex justify-between mt-2 pt-2 border-t border-black/[0.04]">
+                  <span>Consumed: <strong className="text-neutral-900">{a.quantity}</strong></span>
                   <span>Exp: {a.expiryDate ? new Date(a.expiryDate).toLocaleDateString() : 'N/A'}</span>
                 </div>
               </div>
@@ -249,10 +243,10 @@ export default function DeliveriesPage() {
 
       {/* Success Alert */}
       {successMsg && !fefoResult && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded flex items-center justify-between text-xs">
+        <div className="p-4 bg-emerald-50/80 backdrop-blur-md border border-emerald-200/80 text-emerald-800 rounded-2xl flex items-center justify-between text-xs shadow-xs">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{successMsg}</span>
+            <span className="font-medium">{successMsg}</span>
           </div>
           <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 hover:text-emerald-800">
             <X className="w-4 h-4" />
@@ -262,10 +256,10 @@ export default function DeliveriesPage() {
 
       {/* Error Alert */}
       {error && (
-        <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded flex items-center justify-between text-xs">
+        <div className="p-4 bg-rose-50/80 backdrop-blur-md border border-rose-200/80 text-rose-800 rounded-2xl flex items-center justify-between text-xs shadow-xs">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>{error}</span>
+            <span className="font-medium">{error}</span>
           </div>
           <button onClick={() => setError(null)} className="text-rose-600 hover:text-rose-800">
             <X className="w-4 h-4" />
@@ -274,55 +268,66 @@ export default function DeliveriesPage() {
       )}
 
       {/* Search Bar */}
-      <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search by delivery reference, customer, or warehouse..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white"
+      <FlatCard className="p-3">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <Input
+              type="text"
+              placeholder="Search by delivery reference, customer, or warehouse..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              icon={Search}
+            />
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={fetchData}
+            disabled={loading}
+            title="Refresh Deliveries"
+            icon={RefreshCw}
+            className={loading ? 'animate-spin' : ''}
           />
         </div>
-        <button
-          onClick={fetchData}
-          disabled={loading}
-          className="p-2 border border-slate-200 rounded hover:bg-slate-50 text-slate-600 transition-colors"
-          title="Refresh Deliveries"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-indigo-600' : ''}`} />
-        </button>
-      </div>
+      </FlatCard>
 
       {/* Deliveries Table */}
-      <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+      <FlatCard className="p-0 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200 select-none">
+          <table className="w-full text-left text-xs text-neutral-600">
+            <thead className="bg-neutral-50/80 text-neutral-500 font-semibold uppercase tracking-wider text-[11px] border-b border-black/[0.04]">
               <tr>
-                <th className="py-2.5 px-4 w-8"></th>
-                <th className="py-2.5 px-4">Reference</th>
-                <th className="py-2.5 px-4">Customer</th>
-                <th className="py-2.5 px-4">Source Warehouse</th>
-                <th className="py-2.5 px-4 text-center">Status</th>
-                <th className="py-2.5 px-4 text-right">Requested Qty</th>
-                <th className="py-2.5 px-4 text-right">Fulfilled Qty</th>
-                <th className="py-2.5 px-4">Dispatched Date</th>
+                <th className="py-3 px-4 w-10 text-center"></th>
+                <th className="py-3 px-4">Reference</th>
+                <th className="py-3 px-4">Customer</th>
+                <th className="py-3 px-4">Source Warehouse</th>
+                <th className="py-3 px-4 text-center">Status</th>
+                <th className="py-3 px-4 text-right">Requested Qty</th>
+                <th className="py-3 px-4 text-right">Fulfilled Qty</th>
+                <th className="py-3 px-4">Dispatched Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-black/[0.04]">
               {loading && deliveries.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="py-8 text-center text-slate-400">
-                    <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-indigo-500" />
+                  <td colSpan="8" className="py-12 text-center text-neutral-400">
+                    <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-amber-500" />
                     Loading deliveries...
                   </td>
                 </tr>
               ) : filteredDeliveries.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="py-8 text-center text-slate-400">
-                    No outbound deliveries found.
+                  <td colSpan="8" className="py-12 text-center">
+                    <EmptyState
+                      icon={Package}
+                      title="No outbound deliveries found"
+                      description="Create a delivery order to dispatch items with automatic FEFO lot allocations."
+                      action={
+                        <Button variant="primary" size="sm" onClick={openModal} icon={Plus}>
+                          New Delivery Order
+                        </Button>
+                      }
+                    />
                   </td>
                 </tr>
               ) : (
@@ -331,52 +336,46 @@ export default function DeliveriesPage() {
                   return (
                     <React.Fragment key={d.id}>
                       <tr 
-                        className={`hover:bg-slate-50/80 transition-colors cursor-pointer ${isExpanded ? 'bg-indigo-50/30' : ''}`}
+                        className={`hover:bg-neutral-50/80 transition-colors cursor-pointer ${isExpanded ? 'bg-amber-50/20' : ''}`}
                         onClick={() => setExpandedId(isExpanded ? null : d.id)}
                       >
-                        <td className="py-2.5 px-4 text-slate-400 text-center">
-                          {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        <td className="py-3 px-4 text-neutral-400 text-center">
+                          {isExpanded ? <ChevronDown className="w-4 h-4 mx-auto" /> : <ChevronRight className="w-4 h-4 mx-auto" />}
                         </td>
-                        <td className="py-2.5 px-4 font-mono font-medium text-indigo-600">
+                        <td className="py-3 px-4 font-mono font-medium text-amber-600">
                           {d.reference}
                         </td>
-                        <td className="py-2.5 px-4 font-medium text-slate-800">
+                        <td className="py-3 px-4 font-medium text-neutral-900">
                           {d.customer_name}
                         </td>
-                        <td className="py-2.5 px-4 text-slate-700">
+                        <td className="py-3 px-4 text-neutral-600">
                           {d.warehouse_name} ({d.warehouse_code})
                         </td>
-                        <td className="py-2.5 px-4 text-center">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
-                            d.status === 'done' 
-                              ? 'bg-emerald-100 text-emerald-800' 
-                              : d.status === 'draft' 
-                              ? 'bg-amber-100 text-amber-800' 
-                              : 'bg-slate-100 text-slate-800'
-                          }`}>
+                        <td className="py-3 px-4 text-center">
+                          <Badge variant={d.status === 'done' ? 'success' : d.status === 'draft' ? 'amber' : 'neutral'}>
                             {d.status}
-                          </span>
+                          </Badge>
                         </td>
-                        <td className="py-2.5 px-4 text-right font-medium text-slate-700">
+                        <td className="py-3 px-4 text-right font-medium text-neutral-700">
                           {parseFloat(d.total_requested_qty || 0).toLocaleString()}
                         </td>
-                        <td className="py-2.5 px-4 text-right font-mono font-semibold text-slate-900">
+                        <td className="py-3 px-4 text-right font-mono font-semibold text-neutral-900">
                           {parseFloat(d.total_done_qty || 0).toLocaleString()}
                         </td>
-                        <td className="py-2.5 px-4 text-slate-500">
+                        <td className="py-3 px-4 text-neutral-500">
                           {new Date(d.created_at).toLocaleDateString()} {new Date(d.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </td>
                       </tr>
                       {isExpanded && (
-                        <tr className="bg-slate-50/60">
-                          <td colSpan="8" className="py-3 px-8">
-                            <div className="p-3 bg-white border border-slate-200 rounded text-xs space-y-2">
-                              <div className="font-semibold text-slate-800 flex items-center justify-between">
+                        <tr className="bg-neutral-50/50">
+                          <td colSpan="8" className="py-4 px-8">
+                            <div className="p-4 bg-white border border-black/[0.06] rounded-xl text-xs space-y-2 shadow-2xs">
+                              <div className="font-semibold text-neutral-800 flex items-center justify-between">
                                 <span>Outbound Order Audit:</span>
-                                <span className="text-[11px] text-slate-500 font-mono">Ref: {d.reference}</span>
+                                <span className="text-[11px] text-neutral-400 font-mono">Ref: {d.reference}</span>
                               </div>
-                              <p className="text-[11px] text-slate-500">
-                                This order automatically consumed available lots based on earliest expiration dates (<strong className="text-slate-700">FEFO priority</strong>) and relieved historical cost layers in FIFO sequence.
+                              <p className="text-[11px] text-neutral-500">
+                                This order automatically consumed available lots based on earliest expiration dates (<strong className="text-neutral-700">FEFO priority</strong>) and relieved historical cost layers in FIFO sequence.
                               </p>
                             </div>
                           </td>
@@ -389,177 +388,145 @@ export default function DeliveriesPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </FlatCard>
 
       {/* Modal: New Outbound Delivery */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-lg shadow-xl border border-slate-200 w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 my-8">
-            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ArrowUpFromLine className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-semibold text-slate-800 text-sm">Create Outbound Delivery Order</h3>
-              </div>
-              <button 
-                onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 rounded p-1"
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Create Outbound Delivery Order"
+        maxWidth="max-w-xl"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {modalError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+              <span>{modalError}</span>
+            </div>
+          )}
+
+          {/* Header Fields */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <Input
+              label="Customer Name *"
+              required
+              placeholder="e.g. Acme Construction Corp"
+              value={formData.customer_name}
+              onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+            />
+            <Select
+              label="Source Warehouse *"
+              required
+              value={formData.source_warehouse_id}
+              onChange={(e) => setFormData({ ...formData, source_warehouse_id: e.target.value })}
+              options={warehouses.map((wh) => ({
+                value: wh.id,
+                label: `${wh.name} (${wh.code})`
+              }))}
+            />
+          </div>
+
+          {/* Line Items */}
+          <div className="pt-2">
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-xs font-semibold uppercase tracking-wider text-neutral-800">
+                Delivery Lines (FEFO Auto-Allocation)
+              </label>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleAddLine}
+                icon={Plus}
               >
-                <X className="w-4 h-4" />
-              </button>
+                Add Product
+              </Button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {modalError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-                  <span>{modalError}</span>
-                </div>
-              )}
+            <div className="space-y-3">
+              {formData.lines.map((line, idx) => {
+                const availableLocs = locations.filter(l => String(l.warehouse_id) === String(formData.source_warehouse_id));
 
-              {/* Header Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Customer Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Acme Construction Corp"
-                    value={formData.customer_name}
-                    onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
-                    className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Source Warehouse *
-                  </label>
-                  <select
-                    required
-                    value={formData.source_warehouse_id}
-                    onChange={(e) => setFormData({ ...formData, source_warehouse_id: e.target.value })}
-                    className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white"
-                  >
-                    {warehouses.map((wh) => (
-                      <option key={wh.id} value={wh.id}>
-                        {wh.name} ({wh.code})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+                return (
+                  <div key={idx} className="p-3.5 bg-neutral-50/70 border border-black/[0.06] rounded-xl relative space-y-3">
+                    {formData.lines.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLine(idx)}
+                        className="absolute top-3 right-3 text-neutral-400 hover:text-rose-600 transition-colors"
+                        title="Remove line"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Select
+                        label="Product *"
+                        required
+                        value={line.product_id}
+                        onChange={(e) => handleLineChange(idx, 'product_id', e.target.value)}
+                        options={products.map(p => ({
+                          value: p.id,
+                          label: `${p.name} (${p.sku}) [On-hand: ${p.on_hand_qty || 0}]`
+                        }))}
+                      />
+                      <Select
+                        label="Source Loc *"
+                        required
+                        value={line.src_location_id}
+                        onChange={(e) => handleLineChange(idx, 'src_location_id', e.target.value)}
+                        options={(availableLocs.length > 0 ? availableLocs : locations).map(loc => ({
+                          value: loc.id,
+                          label: `${loc.name} (${loc.code})`
+                        }))}
+                      />
+                    </div>
 
-              {/* Line Items */}
-              <div className="pt-2">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-semibold text-slate-800 uppercase tracking-wider">
-                    Delivery Lines (FEFO Auto-Allocation)
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleAddLine}
-                    className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Add Product
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {formData.lines.map((line, idx) => {
-                    const availableLocs = locations.filter(l => String(l.warehouse_id) === String(formData.source_warehouse_id));
-
-                    return (
-                      <div key={idx} className="p-3 bg-slate-50 border border-slate-200 rounded-md relative space-y-2">
-                        {formData.lines.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveLine(idx)}
-                            className="absolute top-2 right-2 text-slate-400 hover:text-rose-600"
-                            title="Remove line"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <div>
-                            <label className="block text-[10px] font-medium text-slate-600 mb-0.5">Product *</label>
-                            <select
-                              required
-                              value={line.product_id}
-                              onChange={(e) => handleLineChange(idx, 'product_id', e.target.value)}
-                              className="w-full px-2.5 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 bg-white"
-                            >
-                              {products.map(p => (
-                                <option key={p.id} value={p.id}>
-                                  {p.name} ({p.sku}) [On-hand: {p.on_hand_qty || 0}]
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-[10px] font-medium text-slate-600 mb-0.5">Source Loc *</label>
-                            <select
-                              required
-                              value={line.src_location_id}
-                              onChange={(e) => handleLineChange(idx, 'src_location_id', e.target.value)}
-                              className="w-full px-2.5 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 bg-white"
-                            >
-                              {(availableLocs.length > 0 ? availableLocs : locations).map(loc => (
-                                <option key={loc.id} value={loc.id}>
-                                  {loc.name} ({loc.code})
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-medium text-slate-600 mb-0.5">
-                            Requested Dispatch Quantity *
-                          </label>
-                          <input
-                            type="number"
-                            step="any"
-                            required
-                            min="0.0001"
-                            placeholder="e.g. 50"
-                            value={line.requested_qty}
-                            onChange={(e) => handleLineChange(idx, 'requested_qty', e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500"
-                          />
-                          <p className="text-[10px] text-slate-400 mt-0.5">
-                            Stockyard will automatically consume available stock starting with earliest expiring lots (FEFO).
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded border border-slate-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={modalLoading}
-                  className="px-4 py-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded shadow-sm disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {modalLoading && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                  Allocate & Dispatch Stock
-                </button>
-              </div>
-            </form>
+                    <div>
+                      <Input
+                        label="Requested Dispatch Quantity *"
+                        type="number"
+                        step="any"
+                        required
+                        min="0.0001"
+                        placeholder="e.g. 50"
+                        value={line.requested_qty}
+                        onChange={(e) => handleLineChange(idx, 'requested_qty', e.target.value)}
+                        className="font-mono"
+                      />
+                      <p className="text-[11px] text-neutral-400 mt-1">
+                        Stockyard will automatically consume available stock starting with earliest expiring lots (FEFO).
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+
+          {/* Footer */}
+          <div className="pt-4 border-t border-black/[0.06] flex items-center justify-end gap-2.5">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              disabled={modalLoading}
+              icon={modalLoading ? RefreshCw : ArrowUpFromLine}
+              className={modalLoading ? 'animate-spin' : ''}
+            >
+              {modalLoading ? 'Allocating...' : 'Allocate & Dispatch Stock'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

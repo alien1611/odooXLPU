@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import api from '../api/client';
 import useAuth from '../hooks/useAuth';
 import ShippingDocumentModal from '../components/shipping/ShippingDocumentModal';
+import PageHeader from '../components/ui/PageHeader';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
 import {
   Truck,
   Package,
@@ -27,6 +30,7 @@ import {
   SlidersHorizontal,
   Info
 } from 'lucide-react';
+
 
 export default function ShippingPage() {
   const { user, isManager } = useAuth();
@@ -343,109 +347,106 @@ export default function ShippingPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <Truck className="w-5 h-5 text-blue-600" />
-            Shipping Station & Freight Carrier Dispatch
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Cartonization, manual weight capture, packing slips, bills of lading, and local outbound carrier dispatch.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={fetchData}
-            disabled={loading}
-            className="p-2 border border-slate-200 rounded hover:bg-slate-50 text-slate-600 transition-colors"
-            title="Refresh Data"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-600' : ''}`} />
-          </button>
-          {isManager && (
-            <button
-              onClick={() => setShowCarrierModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Local Carrier
-            </button>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title="Shipping & Freight Carrier Dispatch"
+        subtitle="Cartonization, manual weight capture, packing slips, bills of lading, and local outbound carrier dispatch."
+        actions={
+          <div className="flex items-center gap-2.5">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={fetchData}
+              disabled={loading}
+              title="Refresh Data"
+              icon={RefreshCw}
+              className={loading ? 'animate-spin' : ''}
+            />
+            {isManager && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowCarrierModal(true)}
+                icon={Plus}
+              >
+                Add Local Carrier
+              </Button>
+            )}
+          </div>
+        }
+      />
 
       {/* Notifications */}
       {successMsg && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded flex items-center justify-between text-xs animate-in fade-in">
+        <div className="p-4 bg-emerald-50/80 backdrop-blur-md border border-emerald-200/80 text-emerald-800 rounded-2xl flex items-center justify-between text-xs shadow-xs animate-in fade-in">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{successMsg}</span>
+            <span className="font-medium">{successMsg}</span>
           </div>
           <button onClick={() => setSuccessMsg(null)}>
-            <X className="w-3.5 h-3.5 text-emerald-600 hover:text-emerald-800" />
+            <X className="w-4 h-4 text-emerald-600 hover:text-emerald-800" />
           </button>
         </div>
       )}
 
       {error && (
-        <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded flex items-center justify-between text-xs animate-in fade-in">
+        <div className="p-4 bg-rose-50/80 backdrop-blur-md border border-rose-200/80 text-rose-800 rounded-2xl flex items-center justify-between text-xs shadow-xs animate-in fade-in">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>{error}</span>
+            <span className="font-medium">{error}</span>
           </div>
           <button onClick={() => setError(null)}>
-            <X className="w-3.5 h-3.5 text-rose-600 hover:text-rose-800" />
+            <X className="w-4 h-4 text-rose-600 hover:text-rose-800" />
           </button>
         </div>
       )}
 
       {/* Workflow Tabs */}
-      <div className="flex border-b border-slate-200 bg-white px-2 rounded-t-lg">
+      <div className="flex flex-wrap bg-black/[0.04] p-1 rounded-full text-xs font-medium gap-1 border border-black/[0.04] w-fit">
         <button
           onClick={() => setActiveTab('packing_station')}
-          className={`py-3 px-4 font-semibold text-xs border-b-2 flex items-center gap-2 transition-all ${
+          className={`px-4 py-1.5 rounded-full flex items-center gap-2 transition-all ${
             activeTab === 'packing_station'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-slate-500 hover:text-slate-700'
+              ? 'bg-white text-neutral-900 font-semibold shadow-2xs'
+              : 'text-neutral-500 hover:text-neutral-900'
           }`}
         >
-          <Package className="w-4 h-4" />
+          <Package className="w-3.5 h-3.5" />
           Packing Station
         </button>
 
         <button
           onClick={() => setActiveTab('packages')}
-          className={`py-3 px-4 font-semibold text-xs border-b-2 flex items-center gap-2 transition-all ${
+          className={`px-4 py-1.5 rounded-full flex items-center gap-2 transition-all ${
             activeTab === 'packages'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-slate-500 hover:text-slate-700'
+              ? 'bg-white text-neutral-900 font-semibold shadow-2xs'
+              : 'text-neutral-500 hover:text-neutral-900'
           }`}
         >
-          <Boxes className="w-4 h-4" />
+          <Boxes className="w-3.5 h-3.5" />
           Cartons & Packages ({packages.length})
         </button>
 
         <button
           onClick={() => setActiveTab('dispatch')}
-          className={`py-3 px-4 font-semibold text-xs border-b-2 flex items-center gap-2 transition-all ${
+          className={`px-4 py-1.5 rounded-full flex items-center gap-2 transition-all ${
             activeTab === 'dispatch'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-slate-500 hover:text-slate-700'
+              ? 'bg-white text-neutral-900 font-semibold shadow-2xs'
+              : 'text-neutral-500 hover:text-neutral-900'
           }`}
         >
-          <Send className="w-4 h-4" />
+          <Send className="w-3.5 h-3.5" />
           Outbound Dispatch ({packages.filter(p => p.status === 'packed').length} Ready)
         </button>
 
         <button
           onClick={() => setActiveTab('carriers')}
-          className={`py-3 px-4 font-semibold text-xs border-b-2 flex items-center gap-2 transition-all ${
+          className={`px-4 py-1.5 rounded-full flex items-center gap-2 transition-all ${
             activeTab === 'carriers'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-slate-500 hover:text-slate-700'
+              ? 'bg-white text-neutral-900 font-semibold shadow-2xs'
+              : 'text-neutral-500 hover:text-neutral-900'
           }`}
         >
-          <Truck className="w-4 h-4" />
+          <Truck className="w-3.5 h-3.5" />
           Carrier Network ({carriers.length})
         </button>
       </div>

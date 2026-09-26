@@ -13,6 +13,7 @@ import {
   Printer
 } from 'lucide-react';
 import BarcodeLabelModal from '../../components/common/PrintableBarcodeLabel';
+import { PageHeader, FlatCard, Button, Badge, Modal, Input, Select, EmptyState } from '../../components/ui';
 
 export default function LocationsPage() {
   const { isManager } = useAuth();
@@ -99,161 +100,154 @@ export default function LocationsPage() {
   const getTypeBadge = (type) => {
     switch (type) {
       case 'internal':
-        return <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-semibold uppercase">Internal Bin</span>;
+        return <Badge variant="neutral" size="sm">Internal Bin</Badge>;
       case 'supplier':
-        return <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-semibold uppercase">Supplier In</span>;
+        return <Badge variant="success" size="sm">Supplier In</Badge>;
       case 'customer':
-        return <span className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 text-[10px] font-semibold uppercase">Customer Out</span>;
+        return <Badge variant="amber" size="sm">Customer Out</Badge>;
       case 'inventory_loss':
-        return <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 text-[10px] font-semibold uppercase">Loss / Scrap</span>;
+        return <Badge variant="danger" size="sm">Loss / Scrap</Badge>;
       default:
-        return <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-semibold uppercase">{type}</span>;
+        return <Badge variant="neutral" size="sm">{type}</Badge>;
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-blue-600" />
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Storage Locations</h1>
-            <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-mono text-slate-600">
-              {locations.length}
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Physical aisles, racks, bins, zones, and external partner boundary locations
-          </p>
-        </div>
+      <PageHeader
+        title="Storage Locations"
+        description="Physical aisles, racks, bins, zones, and external partner boundary locations"
+        badge={locations.length}
+        actions={
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Warehouse Filter */}
+            <div className="flex items-center gap-2">
+              <Select
+                value={selectedWarehouse}
+                onChange={(e) => setSelectedWarehouse(e.target.value)}
+                className="w-44"
+              >
+                <option value="">All Warehouses</option>
+                {warehouses.map((wh) => (
+                  <option key={wh.id} value={wh.id}>
+                    {wh.code} - {wh.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
 
-        <div className="flex items-center gap-3">
-          {/* Warehouse Filter */}
-          <div className="flex items-center gap-2">
-            <Warehouse className="w-3.5 h-3.5 text-slate-400" />
-            <select
-              value={selectedWarehouse}
-              onChange={(e) => setSelectedWarehouse(e.target.value)}
-              className="text-xs border border-slate-300 rounded px-2.5 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
+            <Button
+              variant="secondary"
+              icon={RefreshCw}
+              onClick={fetchData}
+              disabled={loading}
+              className={loading ? '[&>svg]:animate-spin text-amber-600' : ''}
             >
-              <option value="">All Warehouses</option>
-              {warehouses.map((wh) => (
-                <option key={wh.id} value={wh.id}>
-                  {wh.code} - {wh.name}
-                </option>
-              ))}
-            </select>
+              Refresh
+            </Button>
+
+            {isManager && (
+              <Button
+                variant="primary"
+                icon={Plus}
+                onClick={() => setShowModal(true)}
+              >
+                New Location
+              </Button>
+            )}
           </div>
-
-          <button
-            onClick={fetchData}
-            title="Refresh List"
-            className="p-2 rounded border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-
-          {isManager && (
-            <button
-              onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 shadow-sm transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              New Location
-            </button>
-          )}
-        </div>
-      </div>
+        }
+      />
 
       {/* Success Notification */}
       {successMsg && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded text-xs text-emerald-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+        <div className="p-4 bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{successMsg}</span>
           </div>
-          <button onClick={() => setSuccessMsg(null)}>
-            <X className="w-3.5 h-3.5 text-emerald-600 hover:text-emerald-800" />
+          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 hover:text-emerald-800 p-1">
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Error Notification */}
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-800 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+        <div className="p-4 bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-2xl text-xs text-rose-800 dark:text-rose-300 flex items-center gap-2.5">
+          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Table Card */}
-      <div className="bg-white rounded border border-slate-200 shadow-sm overflow-hidden">
+      <FlatCard className="overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-xs text-slate-500">
-            <RefreshCw className="w-4 h-4 text-blue-600 animate-spin mx-auto mb-2" />
+          <div className="p-12 text-center text-xs text-slate-500">
+            <RefreshCw className="w-5 h-5 text-amber-600 animate-spin mx-auto mb-3" />
             Loading warehouse locations...
           </div>
         ) : locations.length === 0 ? (
-          <div className="p-12 text-center">
-            <MapPin className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-            <h3 className="text-sm font-semibold text-slate-800">No storage locations found</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">
-              Create storage bins, racks, or staging locations inside your warehouse facility.
-            </p>
-            {isManager && (
-              <button
-                onClick={() => setShowModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-blue-600 text-white text-xs font-medium hover:bg-blue-700"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Create Location
-              </button>
-            )}
-          </div>
+          <EmptyState
+            icon={MapPin}
+            title="No storage locations found"
+            description="Create storage bins, racks, or staging locations inside your warehouse facility."
+            action={
+              isManager && (
+                <Button
+                  variant="primary"
+                  icon={Plus}
+                  onClick={() => setShowModal(true)}
+                >
+                  Create Location
+                </Button>
+              )
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px]">
+              <thead className="bg-slate-50/70 dark:bg-slate-900/60 border-b border-slate-100 dark:border-slate-800/80 text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
                 <tr>
-                  <th className="py-2.5 px-4">Warehouse</th>
-                  <th className="py-2.5 px-4">Location Code</th>
-                  <th className="py-2.5 px-4">Location Name</th>
-                  <th className="py-2.5 px-4">Type</th>
-                  <th className="py-2.5 px-4">Parent Location</th>
-                  <th className="py-2.5 px-4">Barcode</th>
-                  <th className="py-2.5 px-4 text-right">Status</th>
-                  <th className="py-2.5 px-4 text-center">Action</th>
+                  <th className="py-3 px-5">Warehouse</th>
+                  <th className="py-3 px-5">Location Code</th>
+                  <th className="py-3 px-5">Location Name</th>
+                  <th className="py-3 px-5">Type</th>
+                  <th className="py-3 px-5">Parent Location</th>
+                  <th className="py-3 px-5">Barcode</th>
+                  <th className="py-3 px-5 text-right">Status</th>
+                  <th className="py-3 px-5 text-center">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {locations.map((loc) => (
-                  <tr key={loc.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 font-semibold text-slate-900">
-                      <span className="font-mono text-blue-700 font-bold">{loc.warehouse_code}</span>
-                      <span className="text-slate-500 ml-1.5 font-normal">({loc.warehouse_name})</span>
+                  <tr key={loc.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                    <td className="py-3.5 px-5 font-medium text-slate-900 dark:text-white">
+                      <span className="font-mono text-amber-600 dark:text-amber-500 font-semibold">{loc.warehouse_code}</span>
+                      <span className="text-slate-400 ml-1.5 font-normal">({loc.warehouse_name})</span>
                     </td>
-                    <td className="py-3 px-4 font-mono font-bold text-slate-800">
+                    <td className="py-3.5 px-5 font-mono font-medium text-slate-800 dark:text-slate-200">
                       {loc.code}
                     </td>
-                    <td className="py-3 px-4 text-slate-900 font-medium">
+                    <td className="py-3.5 px-5 text-slate-900 dark:text-white font-medium">
                       {loc.name}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-5">
                       {getTypeBadge(loc.type)}
                     </td>
-                    <td className="py-3 px-4 text-slate-500">
+                    <td className="py-3.5 px-5 text-slate-500 dark:text-slate-400">
                       {loc.parent_location_name ? (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 font-mono text-[11px]">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-mono text-[11px] text-slate-700 dark:text-slate-300">
                           {loc.parent_location_name}
                         </span>
                       ) : (
                         <span className="text-slate-400 italic">None (Root)</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 font-mono text-[11px] text-slate-500">
+                    <td className="py-3.5 px-5 font-mono text-[11px] text-slate-500 dark:text-slate-400">
                       {loc.barcode ? (
-                        <div className="flex items-center gap-1 text-slate-700">
+                        <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
                           <Barcode className="w-3.5 h-3.5 text-slate-400" />
                           <span>{loc.barcode}</span>
                         </div>
@@ -261,22 +255,20 @@ export default function LocationsPage() {
                         '—'
                       )}
                     </td>
-                    <td className="py-3 px-4 text-right">
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <td className="py-3.5 px-5 text-right">
+                      <Badge variant="success" size="sm" dot>
                         Active
-                      </span>
+                      </Badge>
                     </td>
-                    <td className="py-3 px-4 text-center">
-                      <button
-                        type="button"
+                    <td className="py-3.5 px-5 text-center">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        icon={Printer}
                         onClick={() => setLabelModal({ isOpen: true, location: loc })}
-                        title="Print Location Bin Barcode Label"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium transition-colors border border-slate-200"
                       >
-                        <Printer className="w-3 h-3 text-slate-600" />
-                        <span>Bin Label</span>
-                      </button>
+                        Bin Label
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -284,148 +276,134 @@ export default function LocationsPage() {
             </table>
           </div>
         )}
-      </div>
+      </FlatCard>
 
       {/* Create Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-            <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-900">New Storage Location</h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="New Storage Location"
+      >
+        <form onSubmit={handleCreate} className="space-y-4">
+          {modalError && (
+            <div className="p-3 bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+              <span>{modalError}</span>
             </div>
+          )}
 
-            <form onSubmit={handleCreate} className="p-5 space-y-4">
-              {modalError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                  <span>{modalError}</span>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Warehouse Facility *
-                </label>
-                <select
-                  required
-                  value={formData.warehouse_id}
-                  onChange={(e) => setFormData({ ...formData, warehouse_id: e.target.value, parent_location_id: '' })}
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-600 bg-white"
-                >
-                  <option value="">Select Warehouse...</option>
-                  {warehouses.map((wh) => (
-                    <option key={wh.id} value={wh.id}>
-                      {wh.code} - {wh.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Parent Location (Optional - for Hierarchy)
-                </label>
-                <select
-                  value={formData.parent_location_id}
-                  onChange={(e) => setFormData({ ...formData, parent_location_id: e.target.value })}
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-600 bg-white"
-                >
-                  <option value="">— None (Top Level in Facility) —</option>
-                  {locations
-                    .filter((l) => !formData.warehouse_id || l.warehouse_id === parseInt(formData.warehouse_id, 10))
-                    .map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.code} - {l.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Location Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g. Zone A - Cold Storage, Rack 12-B"
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-600"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Code *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                    placeholder="ZONE-A, RACK-12B"
-                    className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded font-mono uppercase focus:outline-none focus:ring-1 focus:ring-blue-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Type
-                  </label>
-                  <select
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-600 bg-white"
-                  >
-                    <option value="internal">Internal Storage</option>
-                    <option value="supplier">Supplier Location</option>
-                    <option value="customer">Customer Location</option>
-                    <option value="inventory_loss">Inventory Loss / Scrap</option>
-                    <option value="transit">Transit</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Barcode (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={formData.barcode}
-                  onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                  placeholder="Scan or input location barcode..."
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded font-mono focus:outline-none focus:ring-1 focus:ring-blue-600"
-                />
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-3 py-1.5 border border-slate-200 rounded text-xs text-slate-600 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={modalLoading}
-                  className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-500 disabled:opacity-50"
-                >
-                  {modalLoading ? 'Saving...' : 'Create Location'}
-                </button>
-              </div>
-            </form>
+          <div>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Warehouse Facility *
+            </label>
+            <Select
+              required
+              value={formData.warehouse_id}
+              onChange={(e) => setFormData({ ...formData, warehouse_id: e.target.value, parent_location_id: '' })}
+            >
+              <option value="">Select Warehouse...</option>
+              {warehouses.map((wh) => (
+                <option key={wh.id} value={wh.id}>
+                  {wh.code} - {wh.name}
+                </option>
+              ))}
+            </Select>
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Parent Location (Optional - for Hierarchy)
+            </label>
+            <Select
+              value={formData.parent_location_id}
+              onChange={(e) => setFormData({ ...formData, parent_location_id: e.target.value })}
+            >
+              <option value="">— None (Top Level in Facility) —</option>
+              {locations
+                .filter((l) => !formData.warehouse_id || l.warehouse_id === parseInt(formData.warehouse_id, 10))
+                .map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.code} - {l.name}
+                  </option>
+                ))}
+            </Select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Location Name *
+            </label>
+            <Input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g. Zone A - Cold Storage, Rack 12-B"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                Code *
+              </label>
+              <Input
+                type="text"
+                required
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                placeholder="ZONE-A, RACK-12B"
+                className="font-mono uppercase"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                Type
+              </label>
+              <Select
+                value={formData.type}
+                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              >
+                <option value="internal">Internal Storage</option>
+                <option value="supplier">Supplier Location</option>
+                <option value="customer">Customer Location</option>
+                <option value="inventory_loss">Inventory Loss / Scrap</option>
+                <option value="transit">Transit</option>
+              </Select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Barcode (Optional)
+            </label>
+            <Input
+              type="text"
+              value={formData.barcode}
+              onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+              placeholder="Scan or input location barcode..."
+              className="font-mono"
+            />
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-end gap-2.5">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={modalLoading}
+            >
+              {modalLoading ? 'Saving...' : 'Create Location'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Printable Barcode Label Modal */}
       <BarcodeLabelModal

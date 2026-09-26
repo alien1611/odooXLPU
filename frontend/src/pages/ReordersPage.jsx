@@ -8,13 +8,18 @@ import {
   XCircle, 
   Search, 
   Clock, 
-  Layers, 
   Package, 
-  TrendingDown, 
   Sparkles,
-  ArrowRight,
   FileText
 } from 'lucide-react';
+import PageHeader from '../components/ui/PageHeader';
+import FlatCard from '../components/ui/FlatCard';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import Modal from '../components/ui/Modal';
+import EmptyState from '../components/ui/EmptyState';
 
 export default function ReordersPage() {
   const { user } = useAuth();
@@ -126,84 +131,80 @@ export default function ReordersPage() {
   ).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <RefreshCw className="w-5 h-5 text-blue-600" />
-            Consumption-Based Reorder Intelligence
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Automated replenishment triggers calculated from 30-day outbound stock moves, lead times, and safety thresholds.
-          </p>
-        </div>
-
-        {isManager && (
-          <button
-            onClick={handleGenerate}
-            disabled={generating || loading}
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-sm transition-colors disabled:opacity-50 shrink-0"
-          >
-            <Sparkles className={`w-4 h-4 ${generating ? 'animate-spin' : ''}`} />
-            {generating ? 'Calculating 30-Day Ledger...' : 'Run Reorder Engine'}
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title="Consumption-Based Reorder Intelligence"
+        subtitle="Automated replenishment triggers calculated from 30-day outbound stock moves, lead times, and safety thresholds."
+        actions={
+          isManager && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleGenerate}
+              disabled={generating || loading}
+              icon={Sparkles}
+              className={generating ? 'animate-spin' : ''}
+            >
+              {generating ? 'Calculating 30-Day Ledger...' : 'Run Reorder Engine'}
+            </Button>
+          )
+        }
+      />
 
       {/* KPI Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Pending Suggestions</span>
+        <FlatCard className="p-4">
+          <div className="flex items-center justify-between text-neutral-500">
+            <span className="text-xs font-medium">Pending Suggestions</span>
             <Clock className="w-4 h-4 text-amber-500" />
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-900 font-mono">
+          <div className="mt-2 text-2xl font-semibold tracking-tight text-neutral-900 font-mono">
             {pendingCount}
           </div>
-          <div className="mt-1 text-[11px] text-slate-400">Awaiting manager approval</div>
-        </div>
+          <div className="mt-1 text-[11px] text-neutral-400">Awaiting manager approval</div>
+        </FlatCard>
 
-        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Urgent Stock-Out Risks</span>
+        <FlatCard className="p-4">
+          <div className="flex items-center justify-between text-neutral-500">
+            <span className="text-xs font-medium">Urgent Stock-Out Risks</span>
             <AlertTriangle className="w-4 h-4 text-rose-500" />
           </div>
-          <div className="mt-2 text-2xl font-bold text-rose-600 font-mono">
+          <div className="mt-2 text-2xl font-semibold tracking-tight text-rose-600 font-mono">
             {urgentCount}
           </div>
-          <div className="mt-1 text-[11px] text-slate-400">Days left &lt; supplier lead time</div>
-        </div>
+          <div className="mt-1 text-[11px] text-neutral-400">Days left &lt; supplier lead time</div>
+        </FlatCard>
 
-        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Replenishment Units Needed</span>
-            <Package className="w-4 h-4 text-blue-500" />
+        <FlatCard className="p-4">
+          <div className="flex items-center justify-between text-neutral-500">
+            <span className="text-xs font-medium">Replenishment Units Needed</span>
+            <Package className="w-4 h-4 text-neutral-400" />
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-900 font-mono">
+          <div className="mt-2 text-2xl font-semibold tracking-tight text-neutral-900 font-mono">
             {totalSuggestedQty.toLocaleString(undefined, { maximumFractionDigits: 1 })}
           </div>
-          <div className="mt-1 text-[11px] text-slate-400">Total pending recommended volume</div>
-        </div>
+          <div className="mt-1 text-[11px] text-neutral-400">Total pending recommended volume</div>
+        </FlatCard>
 
-        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Draft Receipts Created</span>
+        <FlatCard className="p-4">
+          <div className="flex items-center justify-between text-neutral-500">
+            <span className="text-xs font-medium">Draft Receipts Created</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </div>
-          <div className="mt-2 text-2xl font-bold text-emerald-600 font-mono">
+          <div className="mt-2 text-2xl font-semibold tracking-tight text-emerald-600 font-mono">
             {approvedCount}
           </div>
-          <div className="mt-1 text-[11px] text-slate-400">Approved into draft inbound orders</div>
-        </div>
+          <div className="mt-1 text-[11px] text-neutral-400">Approved into draft inbound orders</div>
+        </FlatCard>
       </div>
 
       {/* Messages */}
       {successMsg && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded flex items-center justify-between text-xs">
+        <div className="p-4 bg-emerald-50/80 backdrop-blur-md border border-emerald-200/80 text-emerald-800 rounded-2xl flex items-center justify-between text-xs shadow-xs">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{successMsg}</span>
+            <span className="font-medium">{successMsg}</span>
           </div>
           <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 hover:text-emerald-800">
             &times;
@@ -212,10 +213,10 @@ export default function ReordersPage() {
       )}
 
       {error && (
-        <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded flex items-center justify-between text-xs">
+        <div className="p-4 bg-rose-50/80 backdrop-blur-md border border-rose-200/80 text-rose-800 rounded-2xl flex items-center justify-between text-xs shadow-xs">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>{error}</span>
+            <span className="font-medium">{error}</span>
           </div>
           <button onClick={() => setError(null)} className="text-rose-600 hover:text-rose-800">
             &times;
@@ -224,96 +225,100 @@ export default function ReordersPage() {
       )}
 
       {/* Filter and Tab Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-        {/* Status Tabs */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded">
-          {[
-            { id: 'pending', label: 'Pending' },
-            { id: 'approved', label: 'Approved' },
-            { id: 'dismissed', label: 'Dismissed' },
-            { id: 'all', label: 'All' },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setStatusFilter(tab.id)}
-              className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-                statusFilter === tab.id
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Search & Warehouse filter */}
-        <div className="flex items-center gap-2 flex-1 sm:justify-end">
-          <div className="relative flex-1 sm:max-w-xs">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-            <input
-              type="text"
-              placeholder="Search product or SKU..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
-            />
+      <FlatCard className="p-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          {/* Status Tabs */}
+          <div className="flex items-center gap-1 bg-black/[0.04] p-1 rounded-full overflow-x-auto">
+            {[
+              { id: 'pending', label: 'Pending' },
+              { id: 'approved', label: 'Approved' },
+              { id: 'dismissed', label: 'Dismissed' },
+              { id: 'all', label: 'All' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setStatusFilter(tab.id)}
+                className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
+                  statusFilter === tab.id
+                    ? 'bg-white text-neutral-900 shadow-2xs font-semibold'
+                    : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          <select
-            value={selectedWh}
-            onChange={(e) => setSelectedWh(e.target.value)}
-            className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
-          >
-            <option value="">All Warehouses</option>
-            {warehouses.map((wh) => (
-              <option key={wh.id} value={wh.id}>
-                {wh.name} ({wh.code})
-              </option>
-            ))}
-          </select>
+          {/* Search & Warehouse filter */}
+          <div className="flex items-center gap-2 flex-1 sm:justify-end">
+            <div className="relative flex-1 sm:max-w-xs">
+              <Input
+                type="text"
+                placeholder="Search product or SKU..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                icon={Search}
+              />
+            </div>
 
-          <button
-            onClick={fetchData}
-            disabled={loading}
-            className="p-2 border border-slate-200 rounded hover:bg-slate-50 text-slate-600 transition-colors shrink-0"
-            title="Refresh"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-600' : ''}`} />
-          </button>
+            <div className="w-48">
+              <Select
+                value={selectedWh}
+                onChange={(e) => setSelectedWh(e.target.value)}
+                options={[
+                  { value: '', label: 'All Warehouses' },
+                  ...warehouses.map((wh) => ({ value: wh.id, label: `${wh.name} (${wh.code})` }))
+                ]}
+              />
+            </div>
+
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={fetchData}
+              disabled={loading}
+              title="Refresh"
+              icon={RefreshCw}
+              className={loading ? 'animate-spin' : ''}
+            />
+          </div>
         </div>
-      </div>
+      </FlatCard>
 
       {/* Suggestions Table */}
-      <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+      <FlatCard className="p-0 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200 select-none">
+          <table className="w-full text-left text-xs text-neutral-600">
+            <thead className="bg-neutral-50/80 text-neutral-500 font-semibold uppercase tracking-wider text-[11px] border-b border-black/[0.04]">
               <tr>
-                <th className="py-2.5 px-4">Product / SKU</th>
-                <th className="py-2.5 px-4">Warehouse</th>
-                <th className="py-2.5 px-4 text-right">Current Stock</th>
-                <th className="py-2.5 px-4 text-right">30d Avg Outflow</th>
-                <th className="py-2.5 px-4 text-center">Days Left</th>
-                <th className="py-2.5 px-4 text-right">Lead Time</th>
-                <th className="py-2.5 px-4 text-right">Reorder Point</th>
-                <th className="py-2.5 px-4 text-right">Suggested Qty</th>
-                <th className="py-2.5 px-4">Status & Traceability</th>
-                <th className="py-2.5 px-4 text-center">Actions</th>
+                <th className="py-3 px-4">Product / SKU</th>
+                <th className="py-3 px-4">Warehouse</th>
+                <th className="py-3 px-4 text-right">Current Stock</th>
+                <th className="py-3 px-4 text-right">30d Avg Outflow</th>
+                <th className="py-3 px-4 text-center">Days Left</th>
+                <th className="py-3 px-4 text-right">Lead Time</th>
+                <th className="py-3 px-4 text-right">Reorder Point</th>
+                <th className="py-3 px-4 text-right">Suggested Qty</th>
+                <th className="py-3 px-4">Status & Traceability</th>
+                <th className="py-3 px-4 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-black/[0.04]">
               {loading && suggestions.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="py-8 text-center text-slate-400">
-                    <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-blue-500" />
+                  <td colSpan="10" className="py-12 text-center text-neutral-400">
+                    <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-amber-500" />
                     Calculating replenishment suggestions...
                   </td>
                 </tr>
               ) : filteredSuggestions.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="py-8 text-center text-slate-400">
-                    No reorder suggestions found for the selected filter.
+                  <td colSpan="10" className="py-12 text-center">
+                    <EmptyState
+                      icon={Package}
+                      title="No reorder suggestions found"
+                      description="No replenishment triggers match the selected filter."
+                    />
                   </td>
                 </tr>
               ) : (
@@ -326,115 +331,104 @@ export default function ReordersPage() {
                   const isUrgent = daysRemaining !== null && daysRemaining < leadTime;
 
                   return (
-                    <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-2.5 px-4">
+                    <tr key={s.id} className="hover:bg-neutral-50/80 transition-colors">
+                      <td className="py-3 px-4">
                         <button
                           onClick={() => setSelectedItem(s)}
-                          className="font-medium text-slate-900 hover:text-blue-600 text-left"
+                          className="font-semibold text-neutral-900 hover:text-amber-600 text-left"
                         >
                           {s.product_name}
                         </button>
-                        <div className="text-[10px] text-slate-400 font-mono">{s.sku} &bull; {s.uom_code}</div>
+                        <div className="text-[11px] text-neutral-400 font-mono mt-0.5">{s.sku} &bull; {s.uom_code}</div>
                       </td>
 
-                      <td className="py-2.5 px-4">
-                        <div className="font-medium text-slate-800">{s.warehouse_name}</div>
-                        <div className="text-[10px] text-slate-400">{s.warehouse_code}</div>
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-neutral-800">{s.warehouse_name}</div>
+                        <div className="text-[11px] text-neutral-400">{s.warehouse_code}</div>
                       </td>
 
-                      <td className="py-2.5 px-4 text-right font-mono font-medium text-slate-900">
+                      <td className="py-3 px-4 text-right font-mono font-medium text-neutral-900">
                         {currentStock.toLocaleString()}
                       </td>
 
-                      <td className="py-2.5 px-4 text-right font-mono text-slate-700">
-                        {avgConsumption > 0 ? `${avgConsumption.toFixed(2)}/d` : <span className="text-slate-400 italic">0.00/d</span>}
+                      <td className="py-3 px-4 text-right font-mono text-neutral-700">
+                        {avgConsumption > 0 ? `${avgConsumption.toFixed(2)}/d` : <span className="text-neutral-400 italic">0.00/d</span>}
                       </td>
 
-                      <td className="py-2.5 px-4 text-center">
+                      <td className="py-3 px-4 text-center">
                         {daysRemaining !== null ? (
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${
-                            isUrgent 
-                              ? 'bg-rose-100 text-rose-800 animate-pulse' 
-                              : daysRemaining <= 30
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-emerald-100 text-emerald-800'
-                          }`}>
+                          <Badge variant={isUrgent ? 'danger' : daysRemaining <= 30 ? 'amber' : 'success'}>
                             {daysRemaining.toFixed(1)}d
-                          </span>
+                          </Badge>
                         ) : (
-                          <span className="text-[10px] text-slate-400 italic">No consumption</span>
+                          <span className="text-[11px] text-neutral-400 italic">No consumption</span>
                         )}
                       </td>
 
-                      <td className="py-2.5 px-4 text-right font-mono text-slate-600">
+                      <td className="py-3 px-4 text-right font-mono text-neutral-600">
                         {leadTime}d
                       </td>
 
-                      <td className="py-2.5 px-4 text-right font-mono text-slate-600">
+                      <td className="py-3 px-4 text-right font-mono text-neutral-600">
                         {parseFloat(s.reorder_point || s.min_stock || 0).toLocaleString()}
                       </td>
 
-                      <td className="py-2.5 px-4 text-right font-mono font-bold text-blue-700 text-sm">
+                      <td className="py-3 px-4 text-right font-mono font-semibold text-amber-600 text-sm">
                         +{suggestedQty.toLocaleString()}
                       </td>
 
-                      <td className="py-2.5 px-4">
+                      <td className="py-3 px-4">
                         {s.status === 'pending' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-medium">
-                            <Clock className="w-3 h-3" /> Pending Review
-                          </span>
+                          <Badge variant="amber" icon={Clock}>Pending Review</Badge>
                         )}
                         {s.status === 'approved' && (
                           <div>
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-medium">
-                              <CheckCircle2 className="w-3 h-3" /> Approved
-                            </span>
+                            <Badge variant="success" icon={CheckCircle2}>Approved</Badge>
                             {s.receipt_reference && (
-                              <div className="mt-1 text-[10px] text-slate-500 font-mono flex items-center gap-1">
-                                <FileText className="w-3 h-3 text-slate-400" />
-                                Draft: <span className="font-semibold text-slate-700">{s.receipt_reference}</span>
+                              <div className="mt-1 text-[11px] text-neutral-500 font-mono flex items-center gap-1">
+                                <FileText className="w-3.5 h-3.5 text-neutral-400" />
+                                Draft: <span className="font-semibold text-neutral-800">{s.receipt_reference}</span>
                               </div>
                             )}
                           </div>
                         )}
                         {s.status === 'dismissed' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-medium">
-                            <XCircle className="w-3 h-3" /> Dismissed
-                          </span>
+                          <Badge variant="neutral" icon={XCircle}>Dismissed</Badge>
                         )}
                       </td>
 
-                      <td className="py-2.5 px-4 text-center">
+                      <td className="py-3 px-4 text-center">
                         {s.status === 'pending' ? (
                           isManager ? (
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
+                            <div className="flex items-center justify-center gap-2">
+                              <Button
+                                variant="primary"
+                                size="sm"
                                 onClick={() => handleApprove(s.id)}
                                 disabled={actionLoading[s.id]}
-                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-semibold transition-colors disabled:opacity-50"
-                                title="Approve & Generate Draft Receipt"
                               >
                                 {actionLoading[s.id] === 'approve' ? '...' : 'Approve'}
-                              </button>
-                              <button
+                              </Button>
+                              <Button
+                                variant="secondary"
+                                size="sm"
                                 onClick={() => handleDismiss(s.id)}
                                 disabled={actionLoading[s.id]}
-                                className="px-2 py-1 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded text-[11px] font-medium transition-colors disabled:opacity-50"
-                                title="Dismiss Suggestion"
                               >
                                 {actionLoading[s.id] === 'dismiss' ? '...' : 'Dismiss'}
-                              </button>
+                              </Button>
                             </div>
                           ) : (
-                            <span className="text-[10px] text-slate-400 italic">Manager only</span>
+                            <span className="text-[11px] text-neutral-400 italic">Manager only</span>
                           )
                         ) : (
-                          <button
+                          <Button
+                            variant="secondary"
+                            size="sm"
                             onClick={() => setSelectedItem(s)}
-                            className="text-[11px] text-blue-600 hover:text-blue-800 font-medium"
                           >
                             Details
-                          </button>
+                          </Button>
                         )}
                       </td>
                     </tr>
@@ -444,84 +438,77 @@ export default function ReordersPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </FlatCard>
 
       {/* Details Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg border border-slate-200 shadow-xl max-w-lg w-full p-5 space-y-4">
-            <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+        <Modal
+          isOpen={!!selectedItem}
+          onClose={() => setSelectedItem(null)}
+          title={selectedItem.product_name}
+          maxWidth="max-w-lg"
+        >
+          <div className="space-y-4 text-xs">
+            <div className="text-neutral-500 font-mono">SKU: {selectedItem.sku} &bull; Warehouse: {selectedItem.warehouse_name}</div>
+
+            <div className="p-3.5 bg-neutral-50 border border-black/[0.06] rounded-xl text-neutral-800">
+              <span className="font-semibold block mb-1">Replenishment Rationale:</span>
+              {selectedItem.reason}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 bg-neutral-50/50 p-3.5 rounded-xl border border-black/[0.06]">
               <div>
-                <h3 className="text-base font-bold text-slate-900">{selectedItem.product_name}</h3>
-                <div className="text-xs text-slate-500 font-mono mt-0.5">SKU: {selectedItem.sku} &bull; Warehouse: {selectedItem.warehouse_name}</div>
+                <span className="text-neutral-400">Current On-Hand Stock:</span>
+                <div className="font-semibold text-neutral-900 font-mono mt-0.5">{selectedItem.current_stock}</div>
               </div>
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="text-slate-400 hover:text-slate-600 text-lg leading-none"
-              >
-                &times;
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="p-3 bg-blue-50 border border-blue-100 rounded text-blue-900">
-                <span className="font-semibold block mb-0.5">Replenishment Rationale:</span>
-                {selectedItem.reason}
+              <div>
+                <span className="text-neutral-400">Avg Daily Outflow:</span>
+                <div className="font-semibold text-neutral-900 font-mono mt-0.5">{parseFloat(selectedItem.avg_daily_consumption).toFixed(2)} / day</div>
               </div>
-
-              <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded border border-slate-200">
-                <div>
-                  <span className="text-slate-500">Current On-Hand Stock:</span>
-                  <div className="font-bold text-slate-900 font-mono">{selectedItem.current_stock}</div>
-                </div>
-                <div>
-                  <span className="text-slate-500">Avg Daily Outflow:</span>
-                  <div className="font-bold text-slate-900 font-mono">{parseFloat(selectedItem.avg_daily_consumption).toFixed(2)} / day</div>
-                </div>
-                <div>
-                  <span className="text-slate-500">Projected Run-out:</span>
-                  <div className="font-bold text-slate-900 font-mono">{selectedItem.days_remaining ? `${selectedItem.days_remaining} days` : 'No recent outflow'}</div>
-                </div>
-                <div>
-                  <span className="text-slate-500">Supplier Lead Time:</span>
-                  <div className="font-bold text-slate-900 font-mono">{selectedItem.lead_time_days} days</div>
-                </div>
-                <div>
-                  <span className="text-slate-500">Reorder Threshold:</span>
-                  <div className="font-bold text-slate-900 font-mono">{selectedItem.reorder_point} units</div>
-                </div>
-                <div>
-                  <span className="text-slate-500">Recommended Order:</span>
-                  <div className="font-bold text-blue-700 font-mono text-sm">+{selectedItem.suggested_qty} units</div>
-                </div>
+              <div>
+                <span className="text-neutral-400">Projected Run-out:</span>
+                <div className="font-semibold text-neutral-900 font-mono mt-0.5">{selectedItem.days_remaining ? `${selectedItem.days_remaining} days` : 'No recent outflow'}</div>
               </div>
-
-              {selectedItem.receipt_reference && (
-                <div className="p-3 bg-emerald-50 border border-emerald-100 rounded text-emerald-900">
-                  <span className="font-semibold block mb-0.5">Linked Inbound Order:</span>
-                  Draft Receipt Reference: <span className="font-mono font-bold">{selectedItem.receipt_reference}</span>
-                  <p className="text-[11px] text-emerald-700 mt-1">
-                    Approval created a draft purchasing receipt. Stock quantities will update only when physical inventory is formally validated in Receipts.
-                  </p>
-                </div>
-              )}
-
-              <div className="text-[11px] text-slate-400 pt-1">
-                Generated at: {new Date(selectedItem.generated_at).toLocaleString()}
-                {selectedItem.reviewed_at && ` • Reviewed at: ${new Date(selectedItem.reviewed_at).toLocaleString()}`}
+              <div>
+                <span className="text-neutral-400">Supplier Lead Time:</span>
+                <div className="font-semibold text-neutral-900 font-mono mt-0.5">{selectedItem.lead_time_days} days</div>
+              </div>
+              <div>
+                <span className="text-neutral-400">Reorder Threshold:</span>
+                <div className="font-semibold text-neutral-900 font-mono mt-0.5">{selectedItem.reorder_point} units</div>
+              </div>
+              <div>
+                <span className="text-neutral-400">Recommended Order:</span>
+                <div className="font-semibold text-amber-600 font-mono text-sm mt-0.5">+{selectedItem.suggested_qty} units</div>
               </div>
             </div>
 
-            <div className="flex justify-end pt-2 border-t border-slate-100">
-              <button
+            {selectedItem.receipt_reference && (
+              <div className="p-3.5 bg-emerald-50/60 border border-emerald-200/80 rounded-xl text-emerald-900">
+                <span className="font-semibold block mb-0.5">Linked Inbound Order:</span>
+                Draft Receipt Reference: <span className="font-mono font-semibold">{selectedItem.receipt_reference}</span>
+                <p className="text-[11px] text-emerald-700 mt-1">
+                  Approval created a draft purchasing receipt. Stock quantities will update only when physical inventory is formally validated in Receipts.
+                </p>
+              </div>
+            )}
+
+            <div className="text-[11px] text-neutral-400 pt-1">
+              Generated at: {new Date(selectedItem.generated_at).toLocaleString()}
+              {selectedItem.reviewed_at && ` • Reviewed at: ${new Date(selectedItem.reviewed_at).toLocaleString()}`}
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-black/[0.06]">
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setSelectedItem(null)}
-                className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-medium transition-colors"
               >
                 Close
-              </button>
+              </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

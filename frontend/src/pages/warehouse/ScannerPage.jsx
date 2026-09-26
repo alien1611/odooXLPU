@@ -500,25 +500,25 @@ export default function ScannerPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
       {/* Title & Mode Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <Scan className="w-5 h-5 text-blue-600" />
+          <h1 className="text-xl font-bold text-neutral-900 tracking-tight flex items-center gap-2">
+            <Scan className="w-5 h-5 text-amber-600" />
             Warehouse Mobile Scanner
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Keyboard-wedge scanner terminal & mobile floor station. Instant lookup, receiving, and cycle counting.
+          <p className="text-xs text-neutral-500 mt-0.5">
+            Keyboard-wedge scanner terminal & mobile floor station. Instant lookup, receiving, wave picking, and cycle counting.
           </p>
         </div>
 
         {/* Tab Controls */}
-        <div className="flex flex-wrap bg-slate-200/80 p-1 rounded-lg text-xs font-medium gap-1">
+        <div className="flex flex-wrap bg-black/[0.04] p-1 rounded-full text-xs font-medium gap-1 border border-black/[0.04]">
           <button
             onClick={() => { setActiveTab('lookup'); clearMessages(); }}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
+            className={`px-3.5 py-1.5 rounded-full flex items-center gap-1.5 transition-all ${
               activeTab === 'lookup'
-                ? 'bg-white text-blue-600 font-semibold shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-neutral-900 font-semibold shadow-2xs'
+                : 'text-neutral-500 hover:text-neutral-900'
             }`}
           >
             <Search className="w-3.5 h-3.5" />
@@ -526,10 +526,10 @@ export default function ScannerPage() {
           </button>
           <button
             onClick={() => { setActiveTab('wave_picking'); clearMessages(); }}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
+            className={`px-3.5 py-1.5 rounded-full flex items-center gap-1.5 transition-all ${
               activeTab === 'wave_picking'
-                ? 'bg-white text-blue-600 font-semibold shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-neutral-900 font-semibold shadow-2xs'
+                : 'text-neutral-500 hover:text-neutral-900'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
@@ -537,10 +537,10 @@ export default function ScannerPage() {
           </button>
           <button
             onClick={() => { setActiveTab('replenish'); clearMessages(); }}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
+            className={`px-3.5 py-1.5 rounded-full flex items-center gap-1.5 transition-all ${
               activeTab === 'replenish'
-                ? 'bg-white text-emerald-600 font-semibold shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-neutral-900 font-semibold shadow-2xs'
+                : 'text-neutral-500 hover:text-neutral-900'
             }`}
           >
             <Truck className="w-3.5 h-3.5" />
@@ -548,10 +548,10 @@ export default function ScannerPage() {
           </button>
           <button
             onClick={() => { setActiveTab('receiving'); clearMessages(); }}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
+            className={`px-3.5 py-1.5 rounded-full flex items-center gap-1.5 transition-all ${
               activeTab === 'receiving'
-                ? 'bg-white text-blue-600 font-semibold shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-neutral-900 font-semibold shadow-2xs'
+                : 'text-neutral-500 hover:text-neutral-900'
             }`}
           >
             <ArrowDownToLine className="w-3.5 h-3.5" />
@@ -559,10 +559,10 @@ export default function ScannerPage() {
           </button>
           <button
             onClick={() => { setActiveTab('cycle_count'); clearMessages(); }}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
+            className={`px-3.5 py-1.5 rounded-full flex items-center gap-1.5 transition-all ${
               activeTab === 'cycle_count'
-                ? 'bg-white text-blue-600 font-semibold shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-neutral-900 font-semibold shadow-2xs'
+                : 'text-neutral-500 hover:text-neutral-900'
             }`}
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -572,10 +572,10 @@ export default function ScannerPage() {
       </div>
 
       {/* Persistent Barcode Wedge Input Bar */}
-      <div className="bg-slate-900 text-white p-4 rounded-xl shadow-md border border-slate-800">
+      <div className="bg-neutral-900 text-white p-5 rounded-2xl shadow-sm border border-neutral-800">
         <form onSubmit={handleBarcodeSubmit} className="flex flex-col sm:flex-row items-center gap-3">
           <div className="relative flex-1 w-full">
-            <Scan className="w-5 h-5 text-blue-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Scan className="w-5 h-5 text-amber-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               ref={scanInputRef}
               type="text"
@@ -583,14 +583,14 @@ export default function ScannerPage() {
               onChange={(e) => setScanInput(e.target.value)}
               placeholder="Scan barcode or type and press Enter..."
               autoFocus
-              className="w-full bg-slate-800 text-white text-sm sm:text-base font-mono pl-11 pr-4 py-2.5 rounded-lg border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400"
+              className="w-full bg-neutral-800 text-white text-sm sm:text-base font-mono pl-12 pr-4 py-3 rounded-full border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-amber-500 placeholder-neutral-500 transition-all"
             />
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               type="submit"
               disabled={scanning || !scanInput.trim()}
-              className="flex-1 sm:flex-initial px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium text-xs sm:text-sm rounded-lg flex items-center justify-center gap-2 shadow-sm transition-colors"
+              className="flex-1 sm:flex-initial px-6 py-3 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-semibold text-xs sm:text-sm rounded-full flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.97]"
             >
               {scanning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
               <span>Enter / Scan</span>
@@ -598,13 +598,13 @@ export default function ScannerPage() {
           </div>
         </form>
 
-        <div className="mt-2.5 flex items-center justify-between text-[11px] text-slate-400">
-          <span className="flex items-center gap-1">
+        <div className="mt-3 flex items-center justify-between text-xs text-neutral-400 px-1">
+          <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             Scanner Ready (Enter Key Wedge Active)
           </span>
           {lastScannedCode && (
-            <span className="font-mono text-slate-300">
+            <span className="font-mono text-neutral-300">
               Last Scanned: <strong>{lastScannedCode}</strong>
             </span>
           )}
@@ -613,20 +613,20 @@ export default function ScannerPage() {
 
       {/* Notifications / Feedback Banners */}
       {errorMessage && (
-        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 flex items-start gap-2.5 animate-in fade-in">
+        <div className="p-4 bg-rose-50/80 backdrop-blur-md border border-rose-200/80 rounded-2xl text-xs text-rose-800 flex items-start gap-3 shadow-xs animate-in fade-in">
           <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
           <div className="flex-1 font-medium">{errorMessage}</div>
-          <button onClick={() => setErrorMessage(null)} className="text-rose-400 hover:text-rose-600 text-xs">
+          <button onClick={() => setErrorMessage(null)} className="text-rose-500 hover:text-rose-700 text-xs">
             Dismiss
           </button>
         </div>
       )}
 
       {successMessage && (
-        <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 flex items-start gap-2.5 animate-in fade-in">
+        <div className="p-4 bg-emerald-50/80 backdrop-blur-md border border-emerald-200/80 rounded-2xl text-xs text-emerald-800 flex items-start gap-3 shadow-xs animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
           <div className="flex-1 font-medium">{successMessage}</div>
-          <button onClick={() => setSuccessMessage(null)} className="text-emerald-400 hover:text-emerald-600 text-xs">
+          <button onClick={() => setSuccessMessage(null)} className="text-emerald-500 hover:text-emerald-700 text-xs">
             Dismiss
           </button>
         </div>

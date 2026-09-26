@@ -6,14 +6,12 @@ import {
   TrendingUp, 
   Lock, 
   ArrowRight,
-  Database,
   CheckCircle2,
   AlertTriangle,
   DollarSign,
   AlertCircle,
   Package,
   RefreshCw,
-  Clock,
   Boxes,
   ArrowUpRight,
   Zap,
@@ -21,6 +19,11 @@ import {
   Send
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import PageHeader from '../components/ui/PageHeader';
+import GlassCard from '../components/ui/GlassCard';
+import FlatCard from '../components/ui/FlatCard';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
 
 export default function DashboardPage() {
   const [valuation, setValuation] = useState(null);
@@ -88,354 +91,354 @@ export default function DashboardPage() {
   const binsBelowThresholdCount = replenishments.filter(r => ['ready', 'partially_fulfillable'].includes(r.status)).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-7xl mx-auto">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Stockyard Operations Center</h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Real-Time Operational KPIs &bull; Immutable Single Source of Truth Stock Engine
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={fetchDashboardData}
-            disabled={loading}
-            className="p-1.5 border border-slate-200 rounded hover:bg-slate-50 text-slate-600 transition-colors"
-            title="Refresh KPIs"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-600' : ''}`} />
-          </button>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Operational Intelligence Active
-          </span>
-        </div>
-      </div>
+      <PageHeader
+        title="Operations Center"
+        subtitle="Real-time operational KPIs &bull; Immutable single source of truth stock engine"
+        actions={
+          <div className="flex items-center gap-3">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={fetchDashboardData}
+              disabled={loading}
+              icon={RefreshCw}
+              className={loading ? 'animate-spin' : ''}
+            >
+              Refresh
+            </Button>
+            <Badge variant="success" dot={true}>
+              Operational Engine Active
+            </Badge>
+          </div>
+        }
+      />
 
       {/* Error Alert */}
       {error && (
-        <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
+        <div className="p-4 bg-rose-50/80 backdrop-blur-md border border-rose-200/80 text-rose-800 rounded-2xl flex items-center justify-between text-sm shadow-xs">
+          <div className="flex items-center gap-2.5">
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>{error}</span>
+            <span className="font-medium">{error}</span>
           </div>
-          <button onClick={() => setError(null)} className="text-rose-600 hover:text-rose-800">
+          <button onClick={() => setError(null)} className="text-rose-500 hover:text-rose-700 text-lg leading-none">
             &times;
           </button>
         </div>
       )}
 
-      {/* Operational KPI Grid — 100% Backend-Driven */}
+      {/* Executive KPI Grid — Frosted Glass Treatment */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Inventory Valuation */}
-        <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-medium">Inventory Valuation</span>
-            <DollarSign className="w-4 h-4 text-emerald-600" />
+        <GlassCard className="p-5 flex flex-col justify-between" glow="amber">
+          <div className="flex items-center justify-between text-neutral-500">
+            <span className="text-xs font-semibold uppercase tracking-wider">Inventory Valuation</span>
+            <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-600">
+              <DollarSign className="w-4 h-4" />
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-900 font-mono">
-            {loading && !valuation ? (
-              <span className="text-slate-300">Loading...</span>
-            ) : (
-              `$${totalValuation.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            )}
+          <div className="mt-4">
+            <div className="text-3xl font-semibold tracking-tight text-neutral-900 font-mono">
+              {loading && !valuation ? (
+                <span className="text-neutral-300">...</span>
+              ) : (
+                `$${totalValuation.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              )}
+            </div>
+            <div className="mt-2 flex items-center justify-between text-xs text-neutral-500">
+              <span>{valuation?.total_quantity?.toLocaleString() || 0} units on-hand</span>
+              <Link to="/inventory" className="text-amber-600 hover:text-amber-700 font-medium inline-flex items-center gap-1 group">
+                View <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
           </div>
-          <div className="mt-1 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400">{valuation?.total_quantity?.toLocaleString() || 0} units on-hand</span>
-            <Link to="/inventory" className="text-emerald-600 hover:text-emerald-800 font-medium">
-              View &rarr;
-            </Link>
-          </div>
-        </div>
+        </GlassCard>
 
         {/* KPI 2: Reorder Alerts */}
-        <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-medium">Reorder Alerts</span>
-            <AlertTriangle className={`w-4 h-4 ${urgentReordersCount > 0 ? 'text-rose-600' : 'text-amber-500'}`} />
+        <GlassCard className="p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-neutral-500">
+            <span className="text-xs font-semibold uppercase tracking-wider">Reorder Alerts</span>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${urgentReordersCount > 0 ? 'bg-rose-500/10 text-rose-600' : 'bg-neutral-100 text-neutral-600'}`}>
+              <AlertTriangle className="w-4 h-4" />
+            </div>
           </div>
-          <div className={`mt-2 text-2xl font-bold font-mono ${urgentReordersCount > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
-            {loading && reorders.length === 0 ? (
-              <span className="text-slate-300">Loading...</span>
-            ) : (
-              `${pendingReordersCount} products`
-            )}
+          <div className="mt-4">
+            <div className={`text-3xl font-semibold tracking-tight font-mono ${urgentReordersCount > 0 ? 'text-rose-600' : 'text-neutral-900'}`}>
+              {loading && reorders.length === 0 ? (
+                <span className="text-neutral-300">...</span>
+              ) : (
+                `${pendingReordersCount} SKUs`
+              )}
+            </div>
+            <div className="mt-2 flex items-center justify-between text-xs text-neutral-500">
+              <span className={urgentReordersCount > 0 ? 'text-rose-600 font-medium' : ''}>
+                {urgentReordersCount > 0 ? `${urgentReordersCount} urgent (< lead time)` : 'Stable replenishment'}
+              </span>
+              <Link to="/reorders" className="text-neutral-700 hover:text-neutral-900 font-medium inline-flex items-center gap-1 group">
+                Review <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
           </div>
-          <div className="mt-1 flex items-center justify-between text-[11px]">
-            <span className={urgentReordersCount > 0 ? 'text-rose-600 font-medium' : 'text-slate-400'}>
-              {urgentReordersCount > 0 ? `${urgentReordersCount} urgent (< lead time)` : 'Need replenishment'}
-            </span>
-            <Link to="/reorders" className="text-blue-600 hover:text-blue-800 font-medium">
-              Review &rarr;
-            </Link>
-          </div>
-        </div>
+        </GlassCard>
 
         {/* KPI 3: FEFO Expiry Risk */}
-        <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-medium">FEFO Expiry Risk</span>
-            <ShieldCheck className={`w-4 h-4 ${expire7dCount > 0 || expiredCount > 0 ? 'text-orange-500' : 'text-emerald-600'}`} />
+        <GlassCard className="p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-neutral-500">
+            <span className="text-xs font-semibold uppercase tracking-wider">FEFO Expiry Risk</span>
+            <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-900 font-mono">
-            {loading && !expiry ? (
-              <span className="text-slate-300">Loading...</span>
-            ) : (
-              `${expire7dCount + expiredCount} lots`
-            )}
+          <div className="mt-4">
+            <div className="text-3xl font-semibold tracking-tight text-neutral-900 font-mono">
+              {loading && !expiry ? (
+                <span className="text-neutral-300">...</span>
+              ) : (
+                `${expire7dCount + expiredCount} lots`
+              )}
+            </div>
+            <div className="mt-2 flex items-center justify-between text-xs text-neutral-500">
+              <span>
+                {expiredCount > 0 ? `${expiredCount} expired, ` : ''}{expire7dCount} within 7 days
+              </span>
+              <Link to="/lots" className="text-neutral-700 hover:text-neutral-900 font-medium inline-flex items-center gap-1 group">
+                Lots <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
           </div>
-          <div className="mt-1 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400">
-              {expiredCount > 0 ? `${expiredCount} expired, ` : ''}{expire7dCount} within 7 days
-            </span>
-            <Link to="/lots" className="text-amber-600 hover:text-amber-800 font-medium">
-              Dispatch &rarr;
-            </Link>
-          </div>
-        </div>
+        </GlassCard>
 
         {/* KPI 4: Active Cost Layers */}
-        <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-medium">Perpetual Cost Layers</span>
-            <Layers className="w-4 h-4 text-indigo-500" />
+        <GlassCard className="p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-neutral-500">
+            <span className="text-xs font-semibold uppercase tracking-wider">Cost Layers</span>
+            <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600">
+              <Layers className="w-4 h-4" />
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-900 font-mono">
-            {loading && !valuation ? (
-              <span className="text-slate-300">Loading...</span>
-            ) : (
-              `${valuation?.active_layers_count || 0} active`
-            )}
+          <div className="mt-4">
+            <div className="text-3xl font-semibold tracking-tight text-neutral-900 font-mono">
+              {loading && !valuation ? (
+                <span className="text-neutral-300">...</span>
+              ) : (
+                `${valuation?.active_layers_count || 0} active`
+              )}
+            </div>
+            <div className="mt-2 flex items-center justify-between text-xs text-neutral-500">
+              <span>{valuation?.total_products_count || 0} valued products</span>
+              <Link to="/inventory" className="text-neutral-700 hover:text-neutral-900 font-medium inline-flex items-center gap-1 group">
+                Inspect <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
           </div>
-          <div className="mt-1 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400">{valuation?.total_products_count || 0} valued products</span>
-            <Link to="/inventory" className="text-indigo-600 hover:text-indigo-800 font-medium">
-              Inspect &rarr;
-            </Link>
-          </div>
-        </div>
+        </GlassCard>
       </div>
 
-      {/* Warehouse Logistics & Wave Operations (Phase 6) */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+      {/* Warehouse Logistics & Wave Operations */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-blue-600" />
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+            <Layers className="w-4 h-4 text-neutral-500" />
+            <h2 className="text-sm font-semibold tracking-tight text-neutral-900">
               Warehouse Logistics & Wave Operations
             </h2>
           </div>
-          <span className="text-[11px] text-slate-400 font-medium">Phase 6 Operational Control Room</span>
+          <span className="text-xs text-neutral-400">Phase 6 Operational Control Room</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Logistics KPI 1: Active Pick Waves */}
-          <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-blue-300 transition-colors">
-            <div className="flex items-center justify-between text-slate-500">
+          {/* Logistics KPI 1 */}
+          <FlatCard className="p-4 hover:border-black/[0.12] transition-colors">
+            <div className="flex items-center justify-between text-neutral-500">
               <span className="text-xs font-medium">Active Pick Waves</span>
-              <Layers className="w-4 h-4 text-blue-600" />
+              <Layers className="w-4 h-4 text-neutral-400" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-slate-900 font-mono">
-              {loading ? <span className="text-slate-300">...</span> : activeWavesCount}
+            <div className="mt-2 text-2xl font-semibold tracking-tight text-neutral-900 font-mono">
+              {loading ? '...' : activeWavesCount}
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-slate-400">{waves.length} total waves</span>
-              <Link to="/waves" className="text-blue-600 hover:text-blue-800 font-medium">
-                Dispatch &rarr;
+            <div className="mt-2 flex items-center justify-between text-xs text-neutral-400">
+              <span>{waves.length} total waves</span>
+              <Link to="/waves" className="text-neutral-700 hover:text-neutral-900 font-medium inline-flex items-center gap-1">
+                Dispatch <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-          </div>
+          </FlatCard>
 
-          {/* Logistics KPI 2: Replenishment Tasks */}
-          <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-emerald-300 transition-colors">
-            <div className="flex items-center justify-between text-slate-500">
+          {/* Logistics KPI 2 */}
+          <FlatCard className="p-4 hover:border-black/[0.12] transition-colors">
+            <div className="flex items-center justify-between text-neutral-500">
               <span className="text-xs font-medium">Replenishment Tasks</span>
-              <ArrowUpRight className="w-4 h-4 text-emerald-600" />
+              <ArrowUpRight className="w-4 h-4 text-neutral-400" />
             </div>
-            <div className={`mt-2 text-2xl font-bold font-mono ${pendingReplenishmentsCount > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
-              {loading ? <span className="text-slate-300">...</span> : pendingReplenishmentsCount}
+            <div className={`mt-2 text-2xl font-semibold tracking-tight font-mono ${pendingReplenishmentsCount > 0 ? 'text-amber-600' : 'text-neutral-900'}`}>
+              {loading ? '...' : pendingReplenishmentsCount}
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-slate-400">Forward bin tasks</span>
-              <Link to="/replenishment" className="text-emerald-600 hover:text-emerald-800 font-medium">
-                Replenish &rarr;
+            <div className="mt-2 flex items-center justify-between text-xs text-neutral-400">
+              <span>Forward bin tasks</span>
+              <Link to="/replenishment" className="text-neutral-700 hover:text-neutral-900 font-medium inline-flex items-center gap-1">
+                Replenish <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-          </div>
+          </FlatCard>
 
-          {/* Logistics KPI 3: Cross-Dock Alerts */}
-          <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-rose-300 transition-colors">
-            <div className="flex items-center justify-between text-slate-500">
+          {/* Logistics KPI 3 */}
+          <FlatCard className="p-4 hover:border-black/[0.12] transition-colors">
+            <div className="flex items-center justify-between text-neutral-500">
               <span className="text-xs font-medium">Cross-Dock Alerts</span>
-              <Zap className={`w-4 h-4 ${activeCrossDockCount > 0 ? 'text-rose-600' : 'text-indigo-500'}`} />
+              <Zap className={`w-4 h-4 ${activeCrossDockCount > 0 ? 'text-rose-500' : 'text-neutral-400'}`} />
             </div>
-            <div className={`mt-2 text-2xl font-bold font-mono ${activeCrossDockCount > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
-              {loading ? <span className="text-slate-300">...</span> : activeCrossDockCount}
+            <div className={`mt-2 text-2xl font-semibold tracking-tight font-mono ${activeCrossDockCount > 0 ? 'text-rose-600' : 'text-neutral-900'}`}>
+              {loading ? '...' : activeCrossDockCount}
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className={activeCrossDockCount > 0 ? 'text-rose-600 font-medium' : 'text-slate-400'}>
+            <div className="mt-2 flex items-center justify-between text-xs text-neutral-400">
+              <span className={activeCrossDockCount > 0 ? 'text-rose-600 font-medium' : ''}>
                 {activeCrossDockCount > 0 ? 'Urgent stage demand' : 'No active alerts'}
               </span>
-              <Link to="/cross-dock" className="text-indigo-600 hover:text-indigo-800 font-medium">
-                Stage &rarr;
+              <Link to="/cross-dock" className="text-neutral-700 hover:text-neutral-900 font-medium inline-flex items-center gap-1">
+                Stage <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-          </div>
+          </FlatCard>
 
-          {/* Logistics KPI 4: Forward Bins Below Threshold */}
-          <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-amber-300 transition-colors">
-            <div className="flex items-center justify-between text-slate-500">
+          {/* Logistics KPI 4 */}
+          <FlatCard className="p-4 hover:border-black/[0.12] transition-colors">
+            <div className="flex items-center justify-between text-neutral-500">
               <span className="text-xs font-medium">Forward Bins Below Min</span>
-              <AlertTriangle className={`w-4 h-4 ${binsBelowThresholdCount > 0 ? 'text-amber-500' : 'text-slate-400'}`} />
+              <AlertTriangle className={`w-4 h-4 ${binsBelowThresholdCount > 0 ? 'text-amber-500' : 'text-neutral-400'}`} />
             </div>
-            <div className={`mt-2 text-2xl font-bold font-mono ${binsBelowThresholdCount > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
-              {loading ? <span className="text-slate-300">...</span> : binsBelowThresholdCount}
+            <div className={`mt-2 text-2xl font-semibold tracking-tight font-mono ${binsBelowThresholdCount > 0 ? 'text-amber-600' : 'text-neutral-900'}`}>
+              {loading ? '...' : binsBelowThresholdCount}
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-slate-400">Needs pick face refill</span>
-              <Link to="/replenishment" className="text-amber-600 hover:text-amber-800 font-medium">
-                Configure &rarr;
+            <div className="mt-2 flex items-center justify-between text-xs text-neutral-400">
+              <span>Needs pick face refill</span>
+              <Link to="/replenishment" className="text-neutral-700 hover:text-neutral-900 font-medium inline-flex items-center gap-1">
+                Configure <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-          </div>
+          </FlatCard>
         </div>
       </div>
 
-      {/* Shipping, Cartonization & Carrier Dispatch (Phase 7) */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+      {/* Shipping, Cartonization & Carrier Dispatch */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Truck className="w-4 h-4 text-indigo-600" />
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+            <Truck className="w-4 h-4 text-neutral-500" />
+            <h2 className="text-sm font-semibold tracking-tight text-neutral-900">
               Shipping & Freight Carrier Operations
             </h2>
           </div>
-          <span className="text-[11px] text-slate-400 font-medium">Phase 7 Packing & Dispatch</span>
+          <span className="text-xs text-neutral-400">Phase 7 Packing & Dispatch</span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {/* Shipping KPI 1: Deliveries Ready to Pack */}
-          <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-blue-300 transition-colors">
-            <div className="flex items-center justify-between text-slate-500">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+          <FlatCard className="p-3.5 hover:border-black/[0.12] transition-colors">
+            <div className="flex items-center justify-between text-neutral-500">
               <span className="text-xs font-medium">Ready to Pack</span>
-              <Package className="w-4 h-4 text-blue-600" />
+              <Package className="w-4 h-4 text-neutral-400" />
             </div>
-            <div className="mt-1.5 text-xl font-bold text-slate-900 font-mono">
-              {loading ? <span className="text-slate-300">...</span> : (shippingStats.deliveries_ready_to_pack || 0)}
+            <div className="mt-1.5 text-xl font-semibold tracking-tight text-neutral-900 font-mono">
+              {loading ? '...' : (shippingStats.deliveries_ready_to_pack || 0)}
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-slate-400">Picked deliveries</span>
-              <Link to="/shipping" className="text-blue-600 hover:text-blue-800 font-medium">
-                Pack &rarr;
-              </Link>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-neutral-400">
+              <span>Picked</span>
+              <Link to="/shipping" className="text-neutral-700 hover:text-neutral-900 font-medium">Pack &rarr;</Link>
             </div>
-          </div>
+          </FlatCard>
 
-          {/* Shipping KPI 2: Packages Being Packed */}
-          <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-amber-300 transition-colors">
-            <div className="flex items-center justify-between text-slate-500">
+          <FlatCard className="p-3.5 hover:border-black/[0.12] transition-colors">
+            <div className="flex items-center justify-between text-neutral-500">
               <span className="text-xs font-medium">Being Packed</span>
-              <Boxes className="w-4 h-4 text-amber-500" />
+              <Boxes className="w-4 h-4 text-neutral-400" />
             </div>
-            <div className="mt-1.5 text-xl font-bold font-mono text-slate-900">
-              {loading ? <span className="text-slate-300">...</span> : (shippingStats.packages_being_packed || 0)}
+            <div className="mt-1.5 text-xl font-semibold tracking-tight text-neutral-900 font-mono">
+              {loading ? '...' : (shippingStats.packages_being_packed || 0)}
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-slate-400">Open cartons</span>
-              <Link to="/shipping" className="text-amber-600 hover:text-amber-800 font-medium">
-                Station &rarr;
-              </Link>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-neutral-400">
+              <span>Open cartons</span>
+              <Link to="/shipping" className="text-neutral-700 hover:text-neutral-900 font-medium">Station &rarr;</Link>
             </div>
-          </div>
+          </FlatCard>
 
-          {/* Shipping KPI 3: Packed Deliveries */}
-          <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-emerald-300 transition-colors">
-            <div className="flex items-center justify-between text-slate-500">
-              <span className="text-xs font-medium">Packed Deliveries</span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <FlatCard className="p-3.5 hover:border-black/[0.12] transition-colors">
+            <div className="flex items-center justify-between text-neutral-500">
+              <span className="text-xs font-medium">Packed</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
             </div>
-            <div className="mt-1.5 text-xl font-bold font-mono text-emerald-700">
-              {loading ? <span className="text-slate-300">...</span> : (shippingStats.packed_deliveries || 0)}
+            <div className="mt-1.5 text-xl font-semibold tracking-tight text-neutral-900 font-mono">
+              {loading ? '...' : (shippingStats.packed_deliveries || 0)}
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-slate-400">Cartons sealed</span>
-              <Link to="/shipping" className="text-emerald-600 hover:text-emerald-800 font-medium">
-                Review &rarr;
-              </Link>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-neutral-400">
+              <span>Sealed</span>
+              <Link to="/shipping" className="text-neutral-700 hover:text-neutral-900 font-medium">Review &rarr;</Link>
             </div>
-          </div>
+          </FlatCard>
 
-          {/* Shipping KPI 4: Ready to Dispatch */}
-          <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-indigo-300 transition-colors">
-            <div className="flex items-center justify-between text-slate-500">
+          <FlatCard className="p-3.5 hover:border-black/[0.12] transition-colors">
+            <div className="flex items-center justify-between text-neutral-500">
               <span className="text-xs font-medium">Ready to Dispatch</span>
-              <Send className="w-4 h-4 text-indigo-600" />
+              <Send className="w-4 h-4 text-neutral-400" />
             </div>
-            <div className="mt-1.5 text-xl font-bold font-mono text-indigo-700">
-              {loading ? <span className="text-slate-300">...</span> : (shippingStats.ready_to_dispatch || 0)}
+            <div className="mt-1.5 text-xl font-semibold tracking-tight text-neutral-900 font-mono">
+              {loading ? '...' : (shippingStats.ready_to_dispatch || 0)}
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-slate-400">Carrier assigned</span>
-              <Link to="/shipping" className="text-indigo-600 hover:text-indigo-800 font-medium">
-                Ship &rarr;
-              </Link>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-neutral-400">
+              <span>Carrier assigned</span>
+              <Link to="/shipping" className="text-neutral-700 hover:text-neutral-900 font-medium">Ship &rarr;</Link>
             </div>
-          </div>
+          </FlatCard>
 
-          {/* Shipping KPI 5: Dispatched Today */}
-          <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-slate-300 transition-colors">
-            <div className="flex items-center justify-between text-slate-500">
+          <FlatCard className="p-3.5 hover:border-black/[0.12] transition-colors">
+            <div className="flex items-center justify-between text-neutral-500">
               <span className="text-xs font-medium">Dispatched Today</span>
-              <Truck className="w-4 h-4 text-slate-700" />
+              <Truck className="w-4 h-4 text-neutral-400" />
             </div>
-            <div className="mt-1.5 text-xl font-bold font-mono text-slate-900">
-              {loading ? <span className="text-slate-300">...</span> : (shippingStats.dispatched_today || 0)}
+            <div className="mt-1.5 text-xl font-semibold tracking-tight text-neutral-900 font-mono">
+              {loading ? '...' : (shippingStats.dispatched_today || 0)}
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-slate-400">Outbound freight</span>
-              <Link to="/shipping" className="text-slate-600 hover:text-slate-800 font-medium">
-                Manifest &rarr;
-              </Link>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-neutral-400">
+              <span>Outbound</span>
+              <Link to="/shipping" className="text-neutral-700 hover:text-neutral-900 font-medium">Manifest &rarr;</Link>
             </div>
-          </div>
+          </FlatCard>
         </div>
       </div>
 
       {/* Two Column Layout: Action Items & Recent Ledger Moves */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Reorder Action Queue */}
-        <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+        <FlatCard className="p-5 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
             <div className="flex items-center gap-2">
-              <RefreshCw className="w-4 h-4 text-blue-600" />
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+              <RefreshCw className="w-4 h-4 text-neutral-500" />
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-800">
                 Replenishment Action Queue
               </h3>
             </div>
-            <Link to="/reorders" className="text-[11px] font-medium text-blue-600 hover:text-blue-800">
-              View All ({reorders.length}) &rarr;
+            <Link to="/reorders" className="text-xs font-medium text-amber-600 hover:text-amber-700 inline-flex items-center gap-1 group">
+              View All ({reorders.length}) <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
 
           {reorders.length === 0 ? (
-            <div className="py-6 text-center text-xs text-slate-400">
-              <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto mb-1.5" />
+            <div className="py-8 text-center text-xs text-neutral-400">
+              <CheckCircle2 className="w-7 h-7 text-emerald-500 mx-auto mb-2 opacity-80" />
               All inventory levels are within safe replenishment parameters.
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 text-xs">
+            <div className="divide-y divide-black/[0.04] text-xs">
               {reorders.slice(0, 4).map(r => (
-                <div key={r.id} className="py-2.5 flex items-center justify-between">
+                <div key={r.id} className="py-3 flex items-center justify-between">
                   <div>
-                    <div className="font-semibold text-slate-900">{r.product_name}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">
+                    <div className="font-semibold text-neutral-900">{r.product_name}</div>
+                    <div className="text-[11px] text-neutral-400 font-mono mt-0.5">
                       Stock: {r.current_stock} &bull; Outflow: {parseFloat(r.avg_daily_consumption).toFixed(1)}/d &bull; Lead: {r.lead_time_days}d
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="font-bold text-blue-700 font-mono block">+{parseFloat(r.suggested_qty).toFixed(0)} units</span>
-                    <span className="text-[10px] text-amber-700 font-medium">
+                    <span className="font-semibold text-neutral-900 font-mono block">+{parseFloat(r.suggested_qty).toFixed(0)} units</span>
+                    <span className="text-[10px] text-amber-600 font-medium">
                       {r.days_remaining !== null ? `${r.days_remaining}d left` : 'Below threshold'}
                     </span>
                   </div>
@@ -443,133 +446,133 @@ export default function DashboardPage() {
               ))}
             </div>
           )}
-        </div>
+        </FlatCard>
 
         {/* Right: Recent Immutable Stock Movements */}
-        <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+        <FlatCard className="p-5 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
             <div className="flex items-center gap-2">
-              <Boxes className="w-4 h-4 text-indigo-600" />
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+              <Boxes className="w-4 h-4 text-neutral-500" />
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-800">
                 Live Immutable Stock Ledger
               </h3>
             </div>
-            <Link to="/stock-moves" className="text-[11px] font-medium text-indigo-600 hover:text-indigo-800">
-              Full Ledger &rarr;
+            <Link to="/stock-moves" className="text-xs font-medium text-amber-600 hover:text-amber-700 inline-flex items-center gap-1 group">
+              Full Ledger <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
 
           {recentMoves.length === 0 ? (
-            <div className="py-6 text-center text-xs text-slate-400">
+            <div className="py-8 text-center text-xs text-neutral-400">
               No stock movements recorded yet.
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 text-xs">
+            <div className="divide-y divide-black/[0.04] text-xs">
               {recentMoves.slice(0, 4).map(m => (
-                <div key={m.id} className="py-2 flex items-center justify-between">
+                <div key={m.id} className="py-3 flex items-center justify-between">
                   <div>
-                    <div className="font-semibold text-slate-800 flex items-center gap-1.5">
-                      <span className="font-mono text-slate-500 text-[10px]">{m.reference}</span>
+                    <div className="font-medium text-neutral-900 flex items-center gap-2">
+                      <span className="font-mono text-neutral-400 text-[11px]">{m.reference}</span>
                       <span>&bull;</span>
                       <span>{m.product_name}</span>
                     </div>
-                    <div className="text-[10px] text-slate-400">
-                      Type: <span className="font-medium text-slate-600 capitalize">{m.move_type.replace('_', ' ')}</span> &bull; {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <div className="text-[11px] text-neutral-400 mt-0.5">
+                      Type: <span className="font-medium text-neutral-600 capitalize">{m.move_type.replace('_', ' ')}</span> &bull; {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
-                  <div className="font-mono font-bold text-slate-900 text-right">
+                  <div className="font-mono font-semibold text-neutral-900 text-right">
                     {parseFloat(m.quantity).toLocaleString()} {m.uom_code}
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </FlatCard>
       </div>
 
       {/* Core Architectural Pillars */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Differentiator 1 */}
-        <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col justify-between">
+        <FlatCard className="p-5 flex flex-col justify-between">
           <div>
-            <div className="flex items-center gap-2 text-blue-700 mb-2">
-              <ShieldCheck className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">Differentiator 1</span>
+            <div className="flex items-center gap-2 text-neutral-600 mb-2">
+              <ShieldCheck className="w-4 h-4 text-amber-600" />
+              <span className="text-xs font-semibold uppercase tracking-wider">Differentiator 1</span>
             </div>
-            <h3 className="text-sm font-semibold text-slate-900">Batch / Lot Tracking + FEFO</h3>
-            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+            <h3 className="text-sm font-semibold text-neutral-900 tracking-tight">Batch / Lot Tracking + FEFO</h3>
+            <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">
               Every tracked product movement is tagged with a lot and expiry date. Dispatch algorithms enforce First-Expiry-First-Out to minimize scrap and spoilage.
             </p>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-[11px] font-mono text-slate-400">TABLE: lots</span>
-            <Link to="/lots" className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1">
-              View Lots <ArrowRight className="w-3 h-3" />
+          <div className="mt-4 pt-3 border-t border-black/[0.06] flex items-center justify-between">
+            <span className="text-[11px] font-mono text-neutral-400">TABLE: lots</span>
+            <Link to="/lots" className="text-xs font-medium text-neutral-700 hover:text-neutral-900 flex items-center gap-1 group">
+              View Lots <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
-        </div>
+        </FlatCard>
 
         {/* Differentiator 2 */}
-        <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col justify-between">
+        <FlatCard className="p-5 flex flex-col justify-between">
           <div>
-            <div className="flex items-center gap-2 text-indigo-700 mb-2">
-              <Layers className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">Differentiator 2</span>
+            <div className="flex items-center gap-2 text-neutral-600 mb-2">
+              <Layers className="w-4 h-4 text-amber-600" />
+              <span className="text-xs font-semibold uppercase tracking-wider">Differentiator 2</span>
             </div>
-            <h3 className="text-sm font-semibold text-slate-900">Weighted-Average Costing</h3>
-            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+            <h3 className="text-sm font-semibold text-neutral-900 tracking-tight">Weighted-Average Costing</h3>
+            <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">
               Inventory valuation is calculated using perpetual cost layers updated upon inbound receipt validation, providing accurate inventory balance valuation.
             </p>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-[11px] font-mono text-slate-400">TABLE: cost_layers</span>
-            <Link to="/inventory" className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
-              Valuation Layer <ArrowRight className="w-3 h-3" />
+          <div className="mt-4 pt-3 border-t border-black/[0.06] flex items-center justify-between">
+            <span className="text-[11px] font-mono text-neutral-400">TABLE: cost_layers</span>
+            <Link to="/inventory" className="text-xs font-medium text-neutral-700 hover:text-neutral-900 flex items-center gap-1 group">
+              Valuation Layer <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
-        </div>
+        </FlatCard>
 
         {/* Differentiator 3 */}
-        <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col justify-between">
+        <FlatCard className="p-5 flex flex-col justify-between">
           <div>
-            <div className="flex items-center gap-2 text-amber-700 mb-2">
-              <TrendingUp className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">Differentiator 3</span>
+            <div className="flex items-center gap-2 text-neutral-600 mb-2">
+              <TrendingUp className="w-4 h-4 text-amber-600" />
+              <span className="text-xs font-semibold uppercase tracking-wider">Differentiator 3</span>
             </div>
-            <h3 className="text-sm font-semibold text-slate-900">Consumption-Based Reorders</h3>
-            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+            <h3 className="text-sm font-semibold text-neutral-900 tracking-tight">Consumption-Based Reorders</h3>
+            <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">
               Automated reorder triggers calculate historical consumption rates against min/max thresholds to suggest replenishment purchase orders.
             </p>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-[11px] font-mono text-slate-400">TABLE: reorder_suggestions</span>
-            <Link to="/reorders" className="text-xs font-medium text-amber-600 hover:text-amber-800 flex items-center gap-1">
-              Reorder Engine <ArrowRight className="w-3 h-3" />
+          <div className="mt-4 pt-3 border-t border-black/[0.06] flex items-center justify-between">
+            <span className="text-[11px] font-mono text-neutral-400">TABLE: reorder_suggestions</span>
+            <Link to="/reorders" className="text-xs font-medium text-neutral-700 hover:text-neutral-900 flex items-center gap-1 group">
+              Reorder Engine <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
-        </div>
+        </FlatCard>
       </div>
 
       {/* Architectural Invariant Box */}
-      <div className="p-4 bg-slate-900 text-slate-100 rounded border border-slate-800 shadow-sm">
-        <div className="flex items-start gap-3">
-          <div className="p-2 rounded bg-blue-600/20 text-blue-400 border border-blue-500/30">
+      <div className="p-6 bg-neutral-900 text-neutral-100 rounded-[20px] shadow-sm">
+        <div className="flex items-start gap-4">
+          <div className="p-2.5 rounded-full bg-white/10 text-white border border-white/10">
             <Lock className="w-5 h-5" />
           </div>
           <div className="flex-1">
-            <h4 className="text-sm font-semibold text-white tracking-wide">
+            <h4 className="text-sm font-semibold text-white tracking-tight">
               Architectural Invariant: Immutable Single Source of Truth
             </h4>
-            <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-              <code className="text-blue-300 font-mono">stock_moves</code> is the sole authority for inventory modifications. 
+            <p className="text-xs text-neutral-400 mt-1.5 leading-relaxed">
+              <code className="text-amber-400 font-mono">stock_moves</code> is the sole authority for inventory modifications. 
               Quantities are never directly mutated in tables without a formal stock movement transaction. 
-              <code className="text-slate-300 font-mono"> stock_quants</code> represents a materialized cache of on-hand inventory across locations and lots.
+              <code className="text-neutral-300 font-mono"> stock_quants</code> represents a materialized cache of on-hand inventory across locations and lots.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-mono text-slate-400">
-              <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700">Source: stock_moves</span>
-              <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700">State: stock_quants</span>
-              <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700">Valuation: cost_layers</span>
-              <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700">Traceability: audit_log</span>
+            <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-mono text-neutral-400">
+              <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10">Source: stock_moves</span>
+              <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10">State: stock_quants</span>
+              <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10">Valuation: cost_layers</span>
+              <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10">Traceability: audit_log</span>
             </div>
           </div>
         </div>

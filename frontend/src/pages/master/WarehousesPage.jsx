@@ -10,6 +10,7 @@ import {
   X,
   MapPin
 } from 'lucide-react';
+import { PageHeader, FlatCard, Button, Badge, Modal, Input, EmptyState } from '../../components/ui';
 
 export default function WarehousesPage() {
   const { isManager } = useAuth();
@@ -71,114 +72,108 @@ export default function WarehousesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Warehouse className="w-5 h-5 text-blue-600" />
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Warehouse Facilities</h1>
-            <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-mono text-slate-600">
-              {warehouses.length}
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Physical logistic centers, distribution hubs, and storage facilities
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={fetchWarehouses}
-            title="Refresh List"
-            className="p-2 rounded border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-
-          {isManager && (
-            <button
-              onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 shadow-sm transition-colors"
+      <PageHeader
+        title="Warehouse Facilities"
+        description="Physical logistic centers, distribution hubs, and storage facilities"
+        badge={warehouses.length}
+        actions={
+          <div className="flex items-center gap-2.5">
+            <Button
+              variant="secondary"
+              icon={RefreshCw}
+              onClick={fetchWarehouses}
+              disabled={loading}
+              className={loading ? '[&>svg]:animate-spin text-amber-600' : ''}
             >
-              <Plus className="w-4 h-4" />
-              New Warehouse
-            </button>
-          )}
-        </div>
-      </div>
+              Refresh
+            </Button>
+
+            {isManager && (
+              <Button
+                variant="primary"
+                icon={Plus}
+                onClick={() => setShowModal(true)}
+              >
+                New Warehouse
+              </Button>
+            )}
+          </div>
+        }
+      />
 
       {/* Success Notification */}
       {successMsg && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded text-xs text-emerald-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+        <div className="p-4 bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{successMsg}</span>
           </div>
-          <button onClick={() => setSuccessMsg(null)}>
-            <X className="w-3.5 h-3.5 text-emerald-600 hover:text-emerald-800" />
+          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 hover:text-emerald-800 p-1">
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Error Notification */}
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-800 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+        <div className="p-4 bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-2xl text-xs text-rose-800 dark:text-rose-300 flex items-center gap-2.5">
+          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Table Card */}
-      <div className="bg-white rounded border border-slate-200 shadow-sm overflow-hidden">
+      <FlatCard className="overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-xs text-slate-500">
-            <RefreshCw className="w-4 h-4 text-blue-600 animate-spin mx-auto mb-2" />
+          <div className="p-12 text-center text-xs text-slate-500">
+            <RefreshCw className="w-5 h-5 text-amber-600 animate-spin mx-auto mb-3" />
             Loading warehouse facilities...
           </div>
         ) : warehouses.length === 0 ? (
-          <div className="p-12 text-center">
-            <Warehouse className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-            <h3 className="text-sm font-semibold text-slate-800">No warehouses registered</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">
-              Register a warehouse facility to start tracking inventory across zones and storage bins.
-            </p>
-            {isManager && (
-              <button
-                onClick={() => setShowModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-blue-600 text-white text-xs font-medium hover:bg-blue-700"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Register Facility
-              </button>
-            )}
-          </div>
+          <EmptyState
+            icon={Warehouse}
+            title="No warehouses registered"
+            description="Register a warehouse facility to start tracking inventory across zones and storage bins."
+            action={
+              isManager && (
+                <Button
+                  variant="primary"
+                  icon={Plus}
+                  onClick={() => setShowModal(true)}
+                >
+                  Register Facility
+                </Button>
+              )
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px]">
+              <thead className="bg-slate-50/70 dark:bg-slate-900/60 border-b border-slate-100 dark:border-slate-800/80 text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
                 <tr>
-                  <th className="py-2.5 px-4">Warehouse Code</th>
-                  <th className="py-2.5 px-4">Facility Name</th>
-                  <th className="py-2.5 px-4">Address</th>
-                  <th className="py-2.5 px-4 text-center">Locations</th>
-                  <th className="py-2.5 px-4 text-right">Status</th>
+                  <th className="py-3 px-5">Warehouse Code</th>
+                  <th className="py-3 px-5">Facility Name</th>
+                  <th className="py-3 px-5">Address</th>
+                  <th className="py-3 px-5 text-center">Locations</th>
+                  <th className="py-3 px-5 text-right">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {warehouses.map((w) => (
-                  <tr key={w.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-blue-700">
-                      <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[11px]">
+                  <tr key={w.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                    <td className="py-3.5 px-5 font-mono font-medium text-amber-600 dark:text-amber-500">
+                      <span className="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-800/40 text-[11px]">
                         {w.code}
                       </span>
                     </td>
-                    <td className="py-3 px-4 font-semibold text-slate-900">
+                    <td className="py-3.5 px-5 font-medium text-slate-900 dark:text-white">
                       {w.name}
                     </td>
-                    <td className="py-3 px-4 text-slate-500">
+                    <td className="py-3.5 px-5 text-slate-500 dark:text-slate-400">
                       {w.address ? (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5">
                           <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span>{w.address}</span>
                         </div>
@@ -186,16 +181,15 @@ export default function WarehousesPage() {
                         '—'
                       )}
                     </td>
-                    <td className="py-3 px-4 text-center font-mono">
-                      <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[11px] font-semibold">
+                    <td className="py-3.5 px-5 text-center font-mono">
+                      <Badge variant="neutral" size="sm">
                         {w.location_count}
-                      </span>
+                      </Badge>
                     </td>
-                    <td className="py-3 px-4 text-right">
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <td className="py-3.5 px-5 text-right">
+                      <Badge variant="success" size="sm" dot>
                         Active
-                      </span>
+                      </Badge>
                     </td>
                   </tr>
                 ))}
@@ -203,91 +197,80 @@ export default function WarehousesPage() {
             </table>
           </div>
         )}
-      </div>
+      </FlatCard>
 
       {/* Create Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-            <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-900">Register Warehouse Facility</h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Register Warehouse Facility"
+      >
+        <form onSubmit={handleCreate} className="space-y-4">
+          {modalError && (
+            <div className="p-3 bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+              <span>{modalError}</span>
             </div>
+          )}
 
-            <form onSubmit={handleCreate} className="p-5 space-y-4">
-              {modalError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                  <span>{modalError}</span>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Warehouse Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g. Central Logistics Hub, East Coast Depot"
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Code *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                  placeholder="WH-MAIN, WH-EAST"
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded font-mono uppercase focus:outline-none focus:ring-1 focus:ring-blue-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Physical Address
-                </label>
-                <textarea
-                  rows={2}
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  placeholder="Street, City, State, Postal Code..."
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-600"
-                />
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-3 py-1.5 border border-slate-200 rounded text-xs text-slate-600 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={modalLoading}
-                  className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-500 disabled:opacity-50"
-                >
-                  {modalLoading ? 'Saving...' : 'Establish Facility'}
-                </button>
-              </div>
-            </form>
+          <div>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Warehouse Name *
+            </label>
+            <Input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g. Central Logistics Hub, East Coast Depot"
+            />
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Code *
+            </label>
+            <Input
+              type="text"
+              required
+              value={formData.code}
+              onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+              placeholder="WH-MAIN, WH-EAST"
+              className="font-mono uppercase"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Physical Address
+            </label>
+            <textarea
+              rows={2}
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              placeholder="Street, City, State, Postal Code..."
+              className="w-full px-4 py-2.5 text-xs bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all resize-none"
+            />
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-end gap-2.5">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={modalLoading}
+            >
+              {modalLoading ? 'Saving...' : 'Establish Facility'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

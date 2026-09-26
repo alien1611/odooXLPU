@@ -5,11 +5,17 @@ import {
   Search, 
   RefreshCw, 
   AlertCircle, 
-  ArrowRight,
+  ArrowRight, 
   ShieldCheck,
-  FileText,
-  Filter
+  Package
 } from 'lucide-react';
+import PageHeader from '../components/ui/PageHeader';
+import FlatCard from '../components/ui/FlatCard';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import EmptyState from '../components/ui/EmptyState';
 
 export default function StockMovesPage() {
   const [moves, setMoves] = useState([]);
@@ -51,47 +57,41 @@ export default function StockMovesPage() {
   const getMoveTypeBadge = (type) => {
     switch (type) {
       case 'receipt':
-        return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 uppercase tracking-wide">Receipt (In)</span>;
+        return <Badge variant="success">Receipt (In)</Badge>;
       case 'delivery':
-        return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-800 uppercase tracking-wide">Delivery (Out)</span>;
+        return <Badge variant="neutral">Delivery (Out)</Badge>;
       case 'internal_transfer':
-        return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-100 text-teal-800 uppercase tracking-wide">Transfer</span>;
+        return <Badge variant="neutral">Transfer</Badge>;
       case 'adjustment_in':
-        return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 uppercase tracking-wide">Adj Gain</span>;
+        return <Badge variant="success">Adj Gain</Badge>;
       case 'adjustment_out':
-        return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-800 uppercase tracking-wide">Adj Loss / Scrap</span>;
       case 'scrap':
-        return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-800 uppercase tracking-wide">Scrap</span>;
+        return <Badge variant="danger">Adj Loss / Scrap</Badge>;
       default:
-        return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-800 uppercase tracking-wide">{type}</span>;
+        return <Badge variant="neutral">{type}</Badge>;
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <ArrowLeftRight className="w-5 h-5 text-indigo-600" />
-            Stock Movements (Immutable Ledger)
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Single source of truth: An append-only audit ledger recording every inventory transaction with perpetual cost valuation.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-slate-500 font-mono bg-slate-100 px-3 py-1.5 rounded border border-slate-200">
-          <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span>Ledger Integrity Verified</span>
-        </div>
-      </div>
+      <PageHeader
+        title="Stock Movements"
+        subtitle="Single source of truth: An append-only audit ledger recording every inventory transaction with perpetual cost valuation."
+        actions={
+          <div className="flex items-center gap-2 text-xs text-neutral-600 font-mono bg-white px-3 py-1.5 rounded-full border border-black/[0.06] shadow-2xs">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Ledger Integrity Verified</span>
+          </div>
+        }
+      />
 
       {/* Error Alert */}
       {error && (
-        <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded flex items-center justify-between text-xs">
+        <div className="p-4 bg-rose-50/80 backdrop-blur-md border border-rose-200/80 text-rose-800 rounded-2xl flex items-center justify-between text-xs shadow-xs">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>{error}</span>
+            <span className="font-medium">{error}</span>
           </div>
           <button onClick={() => setError(null)} className="text-rose-600 hover:text-rose-800">
             &times;
@@ -100,71 +100,77 @@ export default function StockMovesPage() {
       )}
 
       {/* Search & Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search by move reference, origin doc, product, SKU, lot, or location..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white"
+      <FlatCard className="p-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex-1">
+            <Input
+              type="text"
+              placeholder="Search by move reference, origin doc, product, SKU, lot, or location..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              icon={Search}
+            />
+          </div>
+          <div className="w-full sm:w-64">
+            <Select
+              value={moveTypeFilter}
+              onChange={(e) => setMoveTypeFilter(e.target.value)}
+              options={[
+                { value: '', label: 'All Movement Types' },
+                { value: 'receipt', label: 'Inbound Receipts' },
+                { value: 'delivery', label: 'Outbound Deliveries' },
+                { value: 'internal_transfer', label: 'Internal Transfers' },
+                { value: 'adjustment_out', label: 'Scrap & Write-Offs' },
+                { value: 'adjustment_in', label: 'Adjustment Gains' }
+              ]}
+            />
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={fetchMoves}
+            disabled={loading}
+            title="Refresh Moves Ledger"
+            icon={RefreshCw}
+            className={loading ? 'animate-spin' : ''}
           />
         </div>
-        <div className="w-full sm:w-56">
-          <select
-            value={moveTypeFilter}
-            onChange={(e) => setMoveTypeFilter(e.target.value)}
-            className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white"
-          >
-            <option value="">All Movement Types</option>
-            <option value="receipt">Inbound Receipts</option>
-            <option value="delivery">Outbound Deliveries</option>
-            <option value="internal_transfer">Internal Transfers</option>
-            <option value="adjustment_out">Scrap & Write-Offs</option>
-            <option value="adjustment_in">Adjustment Gains</option>
-          </select>
-        </div>
-        <button
-          onClick={fetchMoves}
-          disabled={loading}
-          className="p-2 border border-slate-200 rounded hover:bg-slate-50 text-slate-600 transition-colors shrink-0"
-          title="Refresh Moves Ledger"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-indigo-600' : ''}`} />
-        </button>
-      </div>
+      </FlatCard>
 
       {/* Moves Ledger Table */}
-      <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+      <FlatCard className="p-0 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200 select-none">
+          <table className="w-full text-left text-xs text-neutral-600">
+            <thead className="bg-neutral-50/80 text-neutral-500 font-semibold uppercase tracking-wider text-[11px] border-b border-black/[0.04]">
               <tr>
-                <th className="py-2.5 px-4">Move Ref</th>
-                <th className="py-2.5 px-4">Origin Document</th>
-                <th className="py-2.5 px-4">Type</th>
-                <th className="py-2.5 px-4">Product</th>
-                <th className="py-2.5 px-4">Lot / Batch</th>
-                <th className="py-2.5 px-4">Path (From &rarr; To)</th>
-                <th className="py-2.5 px-4 text-right">Qty</th>
-                <th className="py-2.5 px-4 text-right">Unit Cost</th>
-                <th className="py-2.5 px-4 text-right">Total Value</th>
-                <th className="py-2.5 px-4">Timestamp</th>
+                <th className="py-3 px-4">Move Ref</th>
+                <th className="py-3 px-4">Origin Document</th>
+                <th className="py-3 px-4">Type</th>
+                <th className="py-3 px-4">Product</th>
+                <th className="py-3 px-4">Lot / Batch</th>
+                <th className="py-3 px-4">Path (From &rarr; To)</th>
+                <th className="py-3 px-4 text-right">Qty</th>
+                <th className="py-3 px-4 text-right">Unit Cost</th>
+                <th className="py-3 px-4 text-right">Total Value</th>
+                <th className="py-3 px-4">Timestamp</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-black/[0.04]">
               {loading && moves.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="py-8 text-center text-slate-400">
-                    <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-indigo-500" />
+                  <td colSpan="10" className="py-12 text-center text-neutral-400">
+                    <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-amber-500" />
                     Loading immutable stock movements...
                   </td>
                 </tr>
               ) : filteredMoves.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="py-8 text-center text-slate-400">
-                    No matching stock movement ledger entries found.
+                  <td colSpan="10" className="py-12 text-center">
+                    <EmptyState
+                      icon={Package}
+                      title="No stock movements found"
+                      description="No movement transactions match the selected filter."
+                    />
                   </td>
                 </tr>
               ) : (
@@ -174,48 +180,48 @@ export default function StockMovesPage() {
                   const total = qty * cost;
 
                   return (
-                    <tr key={m.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-2.5 px-4 font-mono font-medium text-slate-900">
+                    <tr key={m.id} className="hover:bg-neutral-50/80 transition-colors">
+                      <td className="py-3 px-4 font-mono font-medium text-neutral-900">
                         {m.reference}
                       </td>
-                      <td className="py-2.5 px-4 font-mono text-indigo-600 font-medium">
-                        {m.origin_document || <span className="text-slate-400 font-sans italic">Direct</span>}
+                      <td className="py-3 px-4 font-mono text-amber-600 font-medium">
+                        {m.origin_document || <span className="text-neutral-400 font-sans italic">Direct</span>}
                       </td>
-                      <td className="py-2.5 px-4">
+                      <td className="py-3 px-4">
                         {getMoveTypeBadge(m.move_type)}
                       </td>
-                      <td className="py-2.5 px-4">
-                        <div className="font-medium text-slate-800">{m.product_name}</div>
-                        <div className="text-[10px] text-slate-400 font-mono">{m.product_sku}</div>
+                      <td className="py-3 px-4">
+                        <div className="font-semibold text-neutral-900">{m.product_name}</div>
+                        <div className="text-[11px] text-neutral-400 font-mono mt-0.5">{m.product_sku}</div>
                       </td>
-                      <td className="py-2.5 px-4 font-mono">
+                      <td className="py-3 px-4 font-mono">
                         {m.lot_number ? (
-                          <span className="text-slate-700 font-medium">{m.lot_number}</span>
+                          <Badge variant="amber">{m.lot_number}</Badge>
                         ) : (
-                          <span className="text-slate-400 italic">None</span>
+                          <span className="text-neutral-400 italic">None</span>
                         )}
                       </td>
-                      <td className="py-2.5 px-4">
-                        <div className="flex items-center gap-1.5 text-[11px]">
-                          <span className={m.src_location_code ? 'text-slate-700 font-medium' : 'text-slate-400 italic'}>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <span className={m.src_location_code ? 'text-neutral-800 font-medium' : 'text-neutral-400 italic'}>
                             {m.src_location_code || 'Vendor'}
                           </span>
-                          <ArrowRight className="w-3 h-3 text-slate-400 shrink-0" />
-                          <span className={m.dest_location_code ? 'text-slate-700 font-medium' : 'text-slate-400 italic'}>
+                          <ArrowRight className="w-3 h-3 text-neutral-400 shrink-0" />
+                          <span className={m.dest_location_code ? 'text-neutral-800 font-medium' : 'text-neutral-400 italic'}>
                             {m.dest_location_code || 'Customer'}
                           </span>
                         </div>
                       </td>
-                      <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-900">
+                      <td className="py-3 px-4 text-right font-mono font-semibold text-neutral-900">
                         {qty.toLocaleString()}
                       </td>
-                      <td className="py-2.5 px-4 text-right font-mono text-slate-600">
+                      <td className="py-3 px-4 text-right font-mono text-neutral-600">
                         ${cost.toFixed(2)}
                       </td>
-                      <td className="py-2.5 px-4 text-right font-mono font-semibold text-slate-900">
+                      <td className="py-3 px-4 text-right font-mono font-semibold text-neutral-900">
                         ${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
-                      <td className="py-2.5 px-4 text-slate-500 whitespace-nowrap">
+                      <td className="py-3 px-4 text-neutral-500 whitespace-nowrap">
                         {new Date(m.created_at).toLocaleDateString()} {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </td>
                     </tr>
@@ -225,7 +231,7 @@ export default function StockMovesPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </FlatCard>
     </div>
   );
 }

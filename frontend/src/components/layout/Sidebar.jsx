@@ -23,6 +23,7 @@ import {
   Truck,
   Settings
 } from 'lucide-react';
+import { Logo } from '../ui';
 
 const operationItems = [
   { name: 'Dashboard', to: '/', icon: LayoutDashboard },
@@ -52,23 +53,17 @@ const masterDataItems = [
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0 border-r border-slate-800 select-none">
-      {/* Brand Header */}
-      <div className="h-14 flex items-center px-4 gap-3 border-b border-slate-800 bg-slate-950">
-        <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center font-bold text-white shadow-sm">
-          SY
-        </div>
-        <div className="flex flex-col">
-          <span className="font-semibold text-slate-100 text-sm tracking-wide leading-none">STOCKYARD</span>
-          <span className="text-[10px] text-slate-400 font-mono tracking-wider mt-1 uppercase">ERP Core v1.0</span>
-        </div>
+    <aside className="w-64 bg-white/70 backdrop-blur-2xl text-neutral-800 flex flex-col shrink-0 border-r border-black/[0.06] select-none z-20">
+      {/* Brand Header with Apple-style Logo */}
+      <div className="h-14 flex items-center px-5 border-b border-black/[0.06] bg-white/40">
+        <Logo size="md" showWordmark={true} />
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
         {/* Operations */}
         <div>
-          <div className="px-2 pb-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+          <div className="px-3 pb-1.5 text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
             Warehouse Operations
           </div>
           <div className="space-y-0.5">
@@ -80,14 +75,14 @@ export default function Sidebar() {
                   to={item.to}
                   end={item.to === '/'}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                    `flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 ${
                       isActive
-                        ? 'bg-blue-600 text-white font-semibold shadow-sm'
-                        : 'text-slate-300 hover:bg-slate-800/80 hover:text-slate-100'
+                        ? 'bg-amber-600 text-white font-semibold shadow-xs'
+                        : 'text-neutral-600 hover:bg-neutral-100/80 hover:text-neutral-900'
                     }`
                   }
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
+                  <Icon className="w-4 h-4 shrink-0 stroke-[1.8]" />
                   <span className="truncate">{item.name}</span>
                 </NavLink>
               );
@@ -97,8 +92,8 @@ export default function Sidebar() {
 
         {/* Master Data */}
         <div>
-          <div className="px-2 pb-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-            Master Data Configuration
+          <div className="px-3 pb-1.5 text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
+            Master Data
           </div>
           <div className="space-y-0.5">
             {masterDataItems.map((item) => {
@@ -108,14 +103,14 @@ export default function Sidebar() {
                   key={item.to}
                   to={item.to}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                    `flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 ${
                       isActive
-                        ? 'bg-blue-600 text-white font-semibold shadow-sm'
-                        : 'text-slate-300 hover:bg-slate-800/80 hover:text-slate-100'
+                        ? 'bg-amber-600 text-white font-semibold shadow-xs'
+                        : 'text-neutral-600 hover:bg-neutral-100/80 hover:text-neutral-900'
                     }`
                   }
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
+                  <Icon className="w-4 h-4 shrink-0 stroke-[1.8]" />
                   <span className="truncate">{item.name}</span>
                 </NavLink>
               );
@@ -125,12 +120,12 @@ export default function Sidebar() {
       </nav>
 
       {/* Engine Status / System Core Footer */}
-      <div className="p-3 border-t border-slate-800 bg-slate-950/60">
-        <div className="flex items-center gap-2 text-xs text-slate-400">
-          <Database className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+      <div className="p-3.5 border-t border-black/[0.06] bg-white/40">
+        <div className="flex items-center gap-2 px-2 py-1 text-xs text-neutral-500">
+          <Database className="w-3.5 h-3.5 text-amber-600 shrink-0 stroke-[1.8]" />
           <div className="truncate">
-            <p className="text-[11px] font-mono text-slate-300 truncate">PostgreSQL Engine</p>
-            <p className="text-[10px] text-slate-400 truncate">Immutable Stock Moves</p>
+            <p className="text-[11px] font-medium text-neutral-800 leading-tight">PostgreSQL Engine</p>
+            <p className="text-[10px] text-neutral-400 font-mono">Immutable Moves</p>
           </div>
         </div>
       </div>
