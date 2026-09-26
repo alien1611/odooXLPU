@@ -1,5 +1,7 @@
 # Stockyard — Traceable, Costed & Predictive Inventory System
 
+![Node.js](https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-339933) ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791) ![React](https://img.shields.io/badge/Frontend-React%20%2B%20Tailwind-61DAFB) ![Third party APIs](https://img.shields.io/badge/Third--party%20APIs-Zero-critical)
+
 > Built for [Hackathon Name] · Team: _add names here_
 
 **The pitch:** most inventory tools just digitize a register — they tell you
@@ -8,6 +10,21 @@
 all computed locally, with zero third-party services.
 
 ---
+
+## 🎯 What We're Building
+
+Strip it down to plain terms: a warehouse receives goods, ships goods, moves
+goods between shelves, and occasionally has to correct a miscount. The base
+hackathon brief asks for exactly that, wrapped in a dashboard — and every
+other team in the room is building precisely that.
+
+Stockyard does all of that, plus the three things that actually separate a
+real operations tool from a digitized register: it tracks **which batch** of
+stock is which so nothing quietly expires on a back shelf, it knows **what
+that stock is worth in dollars** at every moment rather than just a
+headcount, and it tells you **what to reorder and when**, based on how fast
+you're actually burning through stock — not a number someone typed in once
+and forgot about.
 
 ## Problem Statement
 
@@ -155,13 +172,25 @@ GET  /api/reports/expiring-lots
 All routes except `/api/auth/*` require a JWT; mutating routes are further
 gated by role via RBAC middleware.
 
-## Demo Script
+## 🎬 Demo Walk-Through
 
-1. Receive 100 units of "Steel Rods" as **Lot A** (expiry in 30 days) → cost layer created, avg cost set
-2. Receive 50 more as **Lot B** (expiry in 60 days) at a different unit cost → avg cost recalculates live
-3. Create a delivery for 120 units → FEFO automatically pulls all of Lot A + 20 from Lot B; inventory value updates correctly
-4. Open the reorder panel → the product is flagged because days-of-stock-left < lead time
-5. Run a stock adjustment for 3 damaged units → logged to the ledger with a reason and an audit trail entry
+This is the exact sequence we run live for judges. Each step demonstrates
+one differentiator back to back, using the same "Steel Rods" example from
+the brief so the contrast with a plain digitized register is obvious.
+
+| Step | Action | What the judges see |
+|---|---|---|
+| 1 | Receive 100 units of "Steel Rods" as **Lot A**, expiry in 30 days | A cost layer is created; average cost is set to $10 |
+| 2 | Receive 50 more as **Lot B**, expiry in 60 days, at $13/unit | Average cost recalculates live, on screen, to $11 |
+| 3 | Create a delivery for 120 units | FEFO automatically pulls all of Lot A + 20 from Lot B — no manual batch picking; inventory value updates correctly |
+| 4 | Open the Reorder panel | "Steel Rods" is already flagged, because days-of-stock-left has dropped below its lead time |
+| 5 | Run a stock adjustment for 3 damaged units, with a reason | The ledger and audit log both update instantly — nothing is silently overwritten |
+
+> 🗣️ **Line to say out loud at step 3:** *"Notice the delivery just split
+> across two batches automatically — that's the part a spreadsheet can't do."*
+
+*(Swap this table for real screenshots or a short GIF of each step once the
+frontend is built — visuals land better than a table for a live judged demo.)*
 
 ## Project Structure
 
@@ -195,7 +224,3 @@ gated by role via RBAC middleware.
 | Name | Role |
 |------|------|
 | _add here_ | |
-
-## License
-
-_Add license if required by the hackathon rules._
