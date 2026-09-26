@@ -2,9 +2,6 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const { pool } = require('../src/db/pool');
 const authService = require('../src/services/authService');
-const receiptService = require('../src/services/receiptService');
-const deliveryService = require('../src/services/deliveryService');
-const carrierService = require('../src/services/carrierService');
 
 async function seed() {
   console.log('====================================================');
@@ -13,10 +10,47 @@ async function seed() {
 
   const client = await pool.connect();
   try {
-    // 1. Users
-    console.log('[SEED] Creating default users...');
+    await client.query('BEGIN');
+
+    // 1. Clean previous demo/test data
+    console.log('[SEED] Cleaning previous transactions and data...');
+    await client.query('DELETE FROM package_lines');
+    await client.query('DELETE FROM packages');
+    await client.query('DELETE FROM cross_dock_alerts');
+    await client.query('DELETE FROM replenishment_tasks');
+    await client.query('DELETE FROM replenishment_configs');
+    await client.query('DELETE FROM reorder_suggestions');
+    await client.query('DELETE FROM delivery_lines');
+    await client.query('DELETE FROM deliveries');
+    await client.query('DELETE FROM pick_waves');
+    await client.query('DELETE FROM receipt_lines');
+    await client.query('DELETE FROM receipts');
+    await client.query('DELETE FROM transfers');
+    await client.query('DELETE FROM adjustments');
+    await client.query('DELETE FROM cost_layers');
+    await client.query('DELETE FROM stock_moves');
+    await client.query('DELETE FROM stock_quants');
+    await client.query('DELETE FROM lots');
+    await client.query(`
+      DELETE FROM audit_log
+      WHERE entity_type IN (
+        'package_lines', 'packages', 'cross_dock_alerts', 'replenishment_tasks',
+        'pick_waves', 'delivery_lines', 'deliveries', 'receipt_lines', 'receipts',
+        'transfers', 'adjustments', 'products', 'lots', 'stock_moves',
+        'locations', 'warehouses', 'categories', 'carriers'
+      )
+    `);
+    await client.query('DELETE FROM products');
+    await client.query('DELETE FROM locations');
+    await client.query("DELETE FROM warehouses WHERE code != 'WH-MAIN'");
+    await client.query('DELETE FROM categories');
+    await client.query('DELETE FROM carriers');
+
+    // 2. Users
+    console.log('[SEED] Ensuring default users...');
     let adminUser, staffUser;
-    try {
+    const existingAdmin = await client.query("SELECT * FROM users WHERE email = 'admin@stockyard.local'");
+    if (existingAdmin.rows.length === 0) {
       const adminRes = await authService.signup({
         name: 'Admin Operator',
         email: 'admin@stockyard.local',
@@ -25,14 +59,13 @@ async function seed() {
       }, '127.0.0.1');
       adminUser = adminRes.user;
       console.log('✔ Admin user created: admin@stockyard.local / Password123!');
-    } catch (e) {
-      console.log('Admin signup note:', e.message);
-      const existing = await client.query("SELECT * FROM users WHERE email = 'admin@stockyard.local'");
-      adminUser = existing.rows[0];
+    } else {
+      adminUser = existingAdmin.rows[0];
       console.log('✔ Admin user exists: admin@stockyard.local');
     }
 
-    try {
+    const existingStaff = await client.query("SELECT * FROM users WHERE email = 'staff@stockyard.local'");
+    if (existingStaff.rows.length === 0) {
       const staffRes = await authService.signup({
         name: 'Warehouse Floor Staff',
         email: 'staff@stockyard.local',
@@ -41,20 +74,16 @@ async function seed() {
       }, '127.0.0.1');
       staffUser = staffRes.user;
       console.log('✔ Staff user created: staff@stockyard.local / Password123!');
-    } catch (e) {
-      console.log('Staff signup note:', e.message);
-      const existing = await client.query("SELECT * FROM users WHERE email = 'staff@stockyard.local'");
-      staffUser = existing.rows[0];
+    } else {
+      staffUser = existingStaff.rows[0];
       console.log('✔ Staff user exists: staff@stockyard.local');
     }
 
-    // 2. Categories
+    // 3. Categories
     console.log('[SEED] Creating categories...');
     const catQueries = [
-      ['Medical & PPE', 'Medical devices, sanitization, protective equipment'],
-      ['Packaging & Tape', 'Corrugated cartons, industrial tape, void fill'],
-      ['Pharmaceuticals', 'Active batches, sterile dressings, medical solutions'],
-      ['Industrial Tools', 'Warehouse equipment, utility blades, hand tools']
+      ['Steel & Metals', 'Raw steel, structural metal, rods and industrial hardware'],
+      ['Packaging', 'Corrugated cartons, industrial tape and protective packing supplies']
     ];
     const catMap = {};
     for (const [name, desc] of catQueries) {
@@ -68,8 +97,8 @@ async function seed() {
     }
     console.log(`✔ Categories seeded: ${Object.keys(catMap).length}`);
 
-    // 3. Units of Measure
-    console.log('[SEED] Creating UoMs...');
+    // 4. Units of Measure
+    console.log('[SEED] Ensuring UoMs...');
     const uomQueries = [
       ['Units', 'UNT', 'unit', 1.000000],
       ['Boxes (10ct)', 'BOX', 'unit', 10.000000],
@@ -86,43 +115,34 @@ async function seed() {
       );
       uomMap[name] = res.rows[0].id;
     }
-    console.log(`✔ UoM seeded: ${Object.keys(uomMap).length}`);
+    console.log(`✔ UoM verified: ${Object.keys(uomMap).length}`);
 
-    // 4. Warehouses
-    console.log('[SEED] Creating Warehouses...');
-    const wh1 = await client.query(
-      `INSERT INTO warehouses (code, name, address) 
-       VALUES ('WH-MAIN', 'Stockyard Central Distribution', '404 Logistics Way, Bay Area, CA')
-       ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name
+    // 5. Warehouse
+    console.log('[SEED] Creating Main Warehouse...');
+    const whRes = await client.query(
+      `INSERT INTO warehouses (code, name, address, is_active) 
+       VALUES ('WH-MAIN', 'Main Warehouse', '100 Industrial Parkway, Sector 4', TRUE)
+       ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, address = EXCLUDED.address, is_active = TRUE
        RETURNING id, code`
     );
-    const wh2 = await client.query(
-      `INSERT INTO warehouses (code, name, address) 
-       VALUES ('WH-EAST', 'Stockyard East Regional Depot', '12 Terminal Drive, Newark, NJ')
-       ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name
-       RETURNING id, code`
-    );
-    const mainWhId = wh1.rows[0].id;
-    console.log('✔ Warehouses seeded: WH-MAIN and WH-EAST');
+    const mainWhId = whRes.rows[0].id;
+    console.log('✔ Warehouse seeded: WH-MAIN (Main Warehouse)');
 
-    // 5. Locations
+    // 6. Locations
     console.log('[SEED] Creating Locations...');
     const locQueries = [
-      [mainWhId, 'LOC-REC-01', 'Inbound Receiving Dock', 'internal', 'LOC-REC-01', 'general'],
-      [mainWhId, 'LOC-STK-01', 'Main Stock Floor Bay A', 'internal', 'LOC-STK-01', 'general'],
-      [mainWhId, 'LOC-RES-01', 'Reserve High-Rack Bay 01', 'internal', 'LOC-RES-01', 'reserve'],
-      [mainWhId, 'LOC-FWD-01', 'Forward Pick Bin 01', 'internal', 'LOC-FWD-01', 'forward_pick'],
-      [mainWhId, 'LOC-OUT-01', 'Outbound Packing & Shipping Bay', 'internal', 'LOC-OUT-01', 'general'],
-      [mainWhId, 'LOC-SUPPLIER', 'Global Supplier Partner Source', 'supplier', null, 'general'],
-      [mainWhId, 'LOC-CUSTOMER', 'Outbound Customer Consignee', 'customer', null, 'general'],
-      [mainWhId, 'LOC-SCRAP', 'Damaged & Quality Quarantine', 'inventory_loss', null, 'general']
+      [mainWhId, 'LOC-REC', 'Receiving', 'internal', 'LOC-REC', 'general'],
+      [mainWhId, 'LOC-RES-A', 'Reserve Rack A', 'internal', 'LOC-RES-A', 'reserve'],
+      [mainWhId, 'LOC-FWD-A', 'Forward Bin A', 'internal', 'LOC-FWD-A', 'forward_pick'],
+      [mainWhId, 'LOC-PACK', 'Packing Station', 'internal', 'LOC-PACK', 'general'],
+      [mainWhId, 'LOC-DISP', 'Dispatch', 'internal', 'LOC-DISP', 'general']
     ];
     const locMap = {};
     for (const [whId, code, name, type, barcode, role] of locQueries) {
       const res = await client.query(
-        `INSERT INTO locations (warehouse_id, code, name, type, barcode, location_role)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT (warehouse_id, code) DO UPDATE SET name = EXCLUDED.name, barcode = EXCLUDED.barcode, location_role = EXCLUDED.location_role
+        `INSERT INTO locations (warehouse_id, code, name, type, barcode, location_role, is_active)
+         VALUES ($1, $2, $3, $4, $5, $6, TRUE)
+         ON CONFLICT (warehouse_id, code) DO UPDATE SET name = EXCLUDED.name, barcode = EXCLUDED.barcode, location_role = EXCLUDED.location_role, is_active = TRUE
          RETURNING id, code`,
         [whId, code, name, type, barcode, role]
       );
@@ -130,112 +150,89 @@ async function seed() {
     }
     console.log(`✔ Locations seeded: ${Object.keys(locMap).length}`);
 
-    // 6. Products
-    console.log('[SEED] Creating Products...');
+    // 7. Products
+    console.log('[SEED] Creating Demo Products...');
     const prodQueries = [
-      ['Nitrile Medical Gloves (Box 100)', 'GLV-100', 'PROD-GLV-100', catMap['Medical & PPE'], uomMap['Units'], 'lot', 40, 7],
-      ['Heavy Duty Packing Tape', 'TAPE-HD', 'PROD-TAPE-HD', catMap['Packaging & Tape'], uomMap['Units'], 'none', 50, 5],
-      ['Sterile Gauze Bandages', 'GAUZE-20', 'PROD-GAUZE-20', catMap['Pharmaceuticals'], uomMap['Units'], 'lot', 30, 10],
-      ['Industrial Safety Helmet', 'HELMET-IND', 'PROD-HELMET-IND', catMap['Medical & PPE'], uomMap['Units'], 'none', 20, 14]
+      // Steel Rods: Tracking lot/FEFO - ZERO STOCK, ZERO LOTS
+      ['Steel Rods', 'STEEL-001', 'STEEL-001', catMap['Steel & Metals'], uomMap['Units'], 'lot', 10.00, 18.00, 20, 200, 20, 5],
+      ['Heavy Duty Packing Tape', 'TAPE-HD', 'TAPE-HD', catMap['Packaging'], uomMap['Units'], 'none', 3.50, 6.00, 10, 100, 10, 3],
+      ['Safety Gloves', 'GLOVES-01', 'GLOVES-01', catMap['Packaging'], uomMap['Units'], 'none', 8.00, 14.00, 10, 80, 10, 4],
+      ['Cardboard Boxes', 'BOX-01', 'BOX-01', catMap['Packaging'], uomMap['Units'], 'none', 1.20, 2.50, 15, 150, 15, 2],
+      ['Industrial Bolts', 'BOLT-01', 'BOLT-01', catMap['Steel & Metals'], uomMap['Units'], 'none', 0.50, 1.20, 20, 200, 20, 3]
     ];
     const prodMap = {};
-    for (const [name, sku, barcode, catId, uomId, trackingType, reorderPt, leadDays] of prodQueries) {
+    for (const [name, sku, barcode, catId, uomId, trackingType, costPrice, salePrice, minStock, maxStock, reorderPt, leadDays] of prodQueries) {
       const res = await client.query(
-        `INSERT INTO products (name, sku, barcode, category_id, uom_id, tracking_type, reorder_point, lead_time_days)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         ON CONFLICT (sku) DO UPDATE SET barcode = EXCLUDED.barcode, tracking_type = EXCLUDED.tracking_type
+        `INSERT INTO products (
+           name, sku, barcode, category_id, uom_id, tracking_type,
+           cost_price, sale_price, min_stock_level, max_stock_level, reorder_point, lead_time_days, is_active
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, TRUE)
+         ON CONFLICT (sku) DO UPDATE SET 
+           name = EXCLUDED.name, barcode = EXCLUDED.barcode, tracking_type = EXCLUDED.tracking_type,
+           cost_price = EXCLUDED.cost_price, sale_price = EXCLUDED.sale_price,
+           min_stock_level = EXCLUDED.min_stock_level, max_stock_level = EXCLUDED.max_stock_level,
+           reorder_point = EXCLUDED.reorder_point, lead_time_days = EXCLUDED.lead_time_days, is_active = TRUE
          RETURNING id, sku, name`,
-        [name, sku, barcode, catId, uomId, trackingType, reorderPt, leadDays]
+        [name, sku, barcode, catId, uomId, trackingType, costPrice, salePrice, minStock, maxStock, reorderPt, leadDays]
       );
       prodMap[sku] = res.rows[0].id;
     }
-    console.log(`✔ Products seeded: ${Object.keys(prodMap).length}`);
+    console.log(`✔ Products seeded: ${Object.keys(prodMap).length} (Steel Rods has ZERO stock/lots)`);
 
-    // 7. Carriers
+    // 8. Carriers
     console.log('[SEED] Seeding Local Freight Carriers...');
-    await carrierService.seedDefaultCarriers();
-    console.log('✔ Carriers seeded.');
+    const carrierQueries = [
+      ['SWIFT', 'Swift Air Express', 'Next Day Air', 'SWF'],
+      ['GROUND', 'Road Freight Ground', 'Standard Ground (3-5 Days)', 'RFG'],
+      ['METRO', 'Metro Local Courier', 'Same Day Local', 'MLC']
+    ];
+    for (const [code, name, service, prefix] of carrierQueries) {
+      await client.query(
+        `INSERT INTO carriers (carrier_code, carrier_name, service_level, tracking_prefix, is_active)
+         VALUES ($1, $2, $3, $4, TRUE)
+         ON CONFLICT (carrier_code) DO UPDATE SET
+           carrier_name = EXCLUDED.carrier_name, service_level = EXCLUDED.service_level, tracking_prefix = EXCLUDED.tracking_prefix, is_active = TRUE`,
+        [code, name, service, prefix]
+      );
+    }
+    console.log('✔ Carriers seeded: Swift Air Express, Road Freight Ground, Metro Local Courier.');
 
-    // 8. Forward Pick Replenishment Rules
-    console.log('[SEED] Creating Forward Pick Replenishment Thresholds...');
-    await client.query(
-      `INSERT INTO replenishment_configs 
-       (warehouse_id, location_id, product_id, min_qty, max_qty)
-       VALUES 
-       ($1, $2, $3, 20, 80),
-       ($1, $2, $4, 15, 60)
-       ON CONFLICT (location_id, product_id) 
-       DO UPDATE SET min_qty = EXCLUDED.min_qty, max_qty = EXCLUDED.max_qty`,
-      [mainWhId, locMap['LOC-FWD-01'], prodMap['GLV-100'], prodMap['GAUZE-20']]
-    );
-    console.log('✔ Replenishment rules configured for Forward Bin LOC-FWD-01.');
+    // 9. Baseline Stock for Non-Steel Products (genuine stock_quants + cost_layers)
+    console.log('[SEED] Establishing baseline stock for non-steel products...');
+    const stockItems = [
+      { sku: 'TAPE-HD', loc: 'LOC-RES-A', qty: 20.0000, cost: 3.5000 },
+      { sku: 'GLOVES-01', loc: 'LOC-FWD-A', qty: 15.0000, cost: 8.0000 },
+      { sku: 'BOX-01', loc: 'LOC-RES-A', qty: 30.0000, cost: 1.2000 },
+      { sku: 'BOLT-01', loc: 'LOC-FWD-A', qty: 25.0000, cost: 0.5000 }
+    ];
 
-    // 9. Initial Inbound Receipts (Seed Stock with FEFO Lots & Costing)
-    console.log('[SEED] Processing Inbound Receipts with FEFO lots & cost layers...');
-    const receiptRes = await receiptService.createReceipt({
-      supplier_name: 'MediSupply Global Corp',
-      destination_warehouse_id: mainWhId,
-      auto_process: true,
-      lines: [
-        {
-          product_id: prodMap['GLV-100'],
-          dest_location_id: locMap['LOC-RES-01'],
-          expected_qty: 30,
-          unit_price: 12.50,
-          lot_number: 'LOT-GLV-2026A',
-          expiry_date: '2026-10-15'
-        },
-        {
-          product_id: prodMap['GLV-100'],
-          dest_location_id: locMap['LOC-RES-01'],
-          expected_qty: 50,
-          unit_price: 13.00,
-          lot_number: 'LOT-GLV-2026B',
-          expiry_date: '2026-12-30'
-        },
-        {
-          product_id: prodMap['TAPE-HD'],
-          dest_location_id: locMap['LOC-STK-01'],
-          expected_qty: 100,
-          unit_price: 3.50
-        },
-        {
-          product_id: prodMap['GAUZE-20'],
-          dest_location_id: locMap['LOC-RES-01'],
-          expected_qty: 45,
-          unit_price: 5.00,
-          lot_number: 'LOT-GAUZE-01',
-          expiry_date: '2026-11-20'
-        }
-      ]
-    }, adminUser.id);
-    console.log(`✔ Inbound stock validated (Receipt ${receiptRes.reference}): 80 Gloves (2 lots), 100 Tape, 45 Gauze.`);
+    for (const item of stockItems) {
+      const pId = prodMap[item.sku];
+      const locId = locMap[item.loc];
 
-    // 10. Create a Ready Outbound Delivery for Wave & Packing Testing
-    console.log('[SEED] Creating a validated delivery order for packing & shipping demo...');
-    const delRes = await deliveryService.createDelivery({
-      customer_name: 'St. Jude Community Hospital',
-      source_warehouse_id: mainWhId,
-      auto_process: true,
-      lines: [
-        {
-          product_id: prodMap['GLV-100'],
-          src_location_id: locMap['LOC-RES-01'],
-          requested_qty: 35
-        },
-        {
-          product_id: prodMap['TAPE-HD'],
-          src_location_id: locMap['LOC-STK-01'],
-          requested_qty: 20
-        }
-      ]
-    }, adminUser.id);
-    console.log(`✔ Delivery ${delRes.reference} validated with FEFO split across lots.`);
+      await client.query(
+        `INSERT INTO stock_quants (product_id, location_id, lot_id, quantity, reserved_quantity, updated_at)
+         VALUES ($1, $2, NULL, $3, 0.0000, NOW())`,
+        [pId, locId, item.qty]
+      );
 
+      await client.query(
+        `INSERT INTO cost_layers (product_id, stock_move_id, initial_qty, remaining_qty, unit_cost, created_at, updated_at)
+         VALUES ($1, NULL, $2, $2, $3, NOW(), NOW())`,
+        [pId, item.qty, item.cost]
+      );
+    }
+    console.log('✔ Baseline stock established for Tape (20), Gloves (15), Boxes (30), Bolts (25).');
+
+    await client.query('COMMIT');
     console.log('\n====================================================');
     console.log('  DATABASE SEEDING COMPLETED SUCCESSFULLY!          ');
     console.log('  Login: admin@stockyard.local / Password123!       ');
     console.log('====================================================');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('[SEED] Fatal error seeding database:', err);
+    throw err;
   } finally {
     client.release();
     await pool.end();
