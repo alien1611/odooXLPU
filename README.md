@@ -1,20 +1,25 @@
-# Stockyard ERP — Warehouse & Inventory Management System
+# Stockyard ERP — Traceable, Costed & Predictive Inventory System
+
+![Node.js](https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-339933) ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791) ![React](https://img.shields.io/badge/Frontend-React%20%2B%20Tailwind-61DAFB) ![Zero Third-party APIs](https://img.shields.io/badge/Third--party%20APIs-Zero-success)
 
 Stockyard is a specialized inventory management system built for high-precision warehouse operations. It is designed around an immutable ledger architecture that provides complete traceability, inventory valuation, and waste minimization.
 
----
-
-## 1. Project Overview
-
-Stockyard addresses three critical challenges in modern supply-chain logistics:
-
-1. **Batch/Lot Tracking with Expiry Dates & FEFO:** Eliminates product spoilage and expiration by enforcing strict First-Expiry-First-Out dispatch sequencing.
-2. **Perpetual Inventory Valuation:** Maintains accurate valuation using weighted-average costing generated continuously through transactional cost layers.
-3. **Consumption-Based Reorders:** Replaces static minimum guesswork with automated replenishment triggers calculated from actual historical material movement.
+**The core differentiator:** most inventory tools merely digitize a static register — they track *how much* quantity is recorded. Stockyard tracks **what that stock is worth** (perpetual weighted-average costing), **which batch expires first** (strict FEFO dispatch), and **what to reorder based on actual consumption velocity** — all computed locally with zero third-party dependencies.
 
 ---
 
-## 2. Architecture
+## 1. What Makes This Different
+
+| # | Core Capability | Business Impact & Rationale |
+|---|---|---|
+| 1 | **Batch/Lot Tracking + FEFO Picking** | Perishable and dated goods are picked and consumed strictly oldest-expiry-first, splitting shipments across batches automatically when required. |
+| 2 | **Weighted-Average Costing Layers** | Perpetual valuation recalculated transactionally upon every receipt: $\text{Avg Cost} = \frac{(\text{Old Qty} \times \text{Old Cost}) + (\text{New Qty} \times \text{New Cost})}{\text{Total Qty}}$. |
+| 3 | **Consumption-Based Reorders** | Real usage velocity over moving windows ($d \times L + SS$) replaces static manual threshold guesswork. |
+| 4 | **Immutable Stock Ledger** | `stock_moves` is the single source of truth for every inventory quantity change; `stock_quants` is a transactionally maintained state cache. |
+
+---
+
+## 2. Architecture Overview
 
 Stockyard follows a clean, decoupled architecture:
 
@@ -46,11 +51,11 @@ Stockyard follows a clean, decoupled architecture:
 ## 3. Tech Stack
 
 - **Backend:** Node.js (v24+) + Express (v4)
-- **Database:** Local PostgreSQL (v14+; running on PostgreSQL 18)
-- **Database Client:** `pg` (node-postgres) with raw parameterized SQL and connection pooling (no ORMs, no auto-sync)
-- **Authentication:** bcrypt + JSON Web Tokens (JWT)
+- **Database:** Local PostgreSQL (raw SQL migrations and parameterized queries with `pg` connection pooling; no ORMs)
+- **Authentication:** bcrypt password hashing + JWT session tokens + self-implemented RBAC middleware
 - **Frontend:** React 18 + Vite 6 + Tailwind CSS v3 + React Router v6 + Lucide React
-- **Process Orchestration:** npm scripts + Concurrently
+- **Test Harness:** Automated end-to-end operational verification suites (`test-phase2.js`, `test-phase3.js`) with transactional memory engine (`pg-mem`)
+- **Zero Third-Party Cloud Services:** 100% locally self-contained
 
 ---
 
@@ -62,209 +67,129 @@ odooXLPU/
 │   ├── src/
 │   │   ├── db/
 │   │   │   ├── migrations/
-│   │   │   │   └── 001_initial_schema.sql  # 18-table relational schema
-│   │   │   └── pool.js                     # pg connection pool & health checker
-│   │   ├── routes/
-│   │   │   ├── health.js                   # /api/health endpoint
-│   │   │   └── index.js                    # Express router index
-│   │   ├── services/                       # Business logic services (upcoming)
+│   │   │   │   ├── 001_initial_schema.sql             # 18-table relational schema
+│   │   │   │   ├── 002_phase2_auth_and_master_data.sql # Auth constraints & OTP resets
+│   │   │   │   └── 003_phase3_stock_engine.sql        # Transfers table & audit constraints
+│   │   │   └── pool.js                                # pg connection pool & health checker
+│   │   ├── routes/                                    # Express REST routers
+│   │   │   ├── auth.js, health.js, products.js, categories.js, uom.js
+│   │   │   ├── warehouses.js, locations.js, receipts.js, deliveries.js
+│   │   │   ├── transfers.js, adjustments.js, quants.js, moves.js, lots.js, auditLogs.js
+│   │   │   └── index.js
+│   │   ├── services/                                  # Business logic & transactional engines
+│   │   │   ├── authService.js, productService.js, warehouseService.js
+│   │   │   ├── receiptService.js, deliveryService.js, transferService.js
+│   │   │   ├── adjustmentService.js, stockQuantService.js, costLayerService.js
+│   │   │   ├── stockMoveService.js, auditService.js
 │   │   ├── middleware/
-│   │   │   └── errorHandler.js             # Centralized error & 404 handler
-│   │   ├── utils/                          # Common helper functions
-│   │   └── server.js                       # Express app entry point
+│   │   │   ├── auth.js, rbac.js, errorHandler.js
+│   │   └── server.js                                  # Express app entry point
 │   ├── scripts/
-│   │   └── migrate.js                      # Transactional SQL migration runner
+│   │   ├── migrate.js                                 # Transactional SQL migration runner
+│   │   ├── test-phase2.js                             # Phase 2 test suite
+│   │   └── test-phase3.js                             # Phase 3 core stock engine test suite
 │   ├── package.json
 │   └── .env.example
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── pages/                          # Operations & module view shells
+│   │   ├── pages/                                     # Operational ERP views
+│   │   │   ├── DashboardPage.jsx, InventoryPage.jsx, StockMovesPage.jsx
+│   │   │   ├── ReceiptsPage.jsx, DeliveriesPage.jsx, TransfersPage.jsx
+│   │   │   ├── AdjustmentsPage.jsx, LotsPage.jsx, ReordersPage.jsx
+│   │   │   └── master/ (ProductsPage, CategoriesPage, UomPage, WarehousesPage, LocationsPage)
 │   │   ├── components/
-│   │   │   ├── layout/                     # AppShell, Sidebar, Header
-│   │   │   └── common/                     # Reusable UI components
+│   │   │   ├── layout/ (AppShell, Sidebar, Header)
+│   │   │   └── common/
 │   │   ├── api/
-│   │   │   └── client.js                   # Centralized API fetch wrapper
-│   │   ├── hooks/                          # Custom React hooks
-│   │   ├── utils/                          # Client-side utility functions
-│   │   ├── App.jsx                         # React Router layout & routes
-│   │   ├── main.jsx                        # React root entry point
-│   │   └── index.css                       # Tailwind directives & theme
-│   ├── index.html
-│   ├── vite.config.js
-│   ├── tailwind.config.js
-│   ├── postcss.config.js
-│   └── package.json
+│   │   │   └── client.js                              # Centralized API fetch wrapper
+│   │   ├── hooks/useAuth.jsx
+│   │   ├── App.jsx                                    # Router configuration
+│   │   └── index.css                                  # Tailwind directives & theme
+│   ├── package.json
+│   └── vite.config.js
 │
 ├── .gitignore
-├── .env.example
-├── package.json                            # Root workspace script runner
+├── package.json                                       # Root orchestration scripts
 └── README.md
 ```
 
 ---
 
-## 5. PostgreSQL Setup
+## 5. 🎬 Live Verification & Walk-Through Sequence
 
-Stockyard relies on a standard local PostgreSQL instance.
+This sequence demonstrates the core differentiators back-to-back:
 
-1. Ensure the PostgreSQL service is running on your machine:
-   - On Windows: Run `Get-Service -Name *postgres*` in PowerShell.
-   - On Linux/macOS: Run `sudo systemctl status postgresql` or `brew services list`.
-2. Create the application database using `psql` or pgAdmin:
-   ```sql
-   CREATE DATABASE stockyard;
-   ```
-3. Create a dedicated database user (optional, or use default `postgres`):
-   ```sql
-   CREATE USER stockyard WITH ENCRYPTED PASSWORD 'your_secure_password';
-   GRANT ALL PRIVILEGES ON DATABASE stockyard TO stockyard;
-   ```
+| Step | Action | Engine Behavior & Outcome |
+|---|---|---|
+| **1** | Receive 100 units of "Steel Rods", Lot A (+30d expiry) @ $10.00 | Cost layer 1 created. Product weighted-average cost is initialized to **$10.00**. Quant: 100 at Stock. |
+| **2** | Receive 50 units of "Steel Rods", Lot B (+60d expiry) @ $13.00 | Weighted-average cost recalculated: $\frac{(100 \times 10) + (50 \times 13)}{150} = \mathbf{\$11.00}$. Cost layer 2 created. Total Quant: 150. |
+| **3** | Dispatch 120 units on outbound delivery | Strict **FEFO** pulls 100 from Lot A (depleted to 0) + 20 from Lot B (30 remaining). Cost layer 1 depleted to 0; layer 2 remaining: 30. Total stock: 30. |
+| **4** | Attempt dispatch of 50 units | Rejected with `400 INSUFFICIENT_STOCK` (only 30 available). Transaction is rolled back with zero state persisted. |
+| **5** | Transfer 10 units of Lot B to Shelf B | Location Stock decreases from 30 to 20; Shelf B increases from 0 to 10. **Lot ID and cost price preserved.** Total stock remains 30. |
+| **6** | Stock adjustment for 2 damaged units | Physical count of 18 recorded (difference: -2). Quant updated to 18; compensatory move logged to inventory loss location. |
 
 ---
 
-## 6. Environment Variables
+## 6. Getting Started
 
-Copy `.env.example` in `backend/` to `backend/.env`:
+### Prerequisites
 
-```bash
-cp backend/.env.example backend/.env
-```
+- Node.js v20+ (Node v24 tested)
+- PostgreSQL (local instance or test suite)
+- npm v10+
 
-Configure your credentials inside `backend/.env`:
-
-```env
-PORT=5000
-DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/stockyard
-JWT_SECRET=replace_with_secure_secret
-NODE_ENV=development
-```
-
-*(Note: Never commit `.env` containing sensitive production credentials.)*
-
----
-
-## 7. Migration Instructions
-
-Stockyard uses real SQL migration files executed in sorted order within transactions. Migrations are tracked in the `schema_migrations` table.
-
-To run pending migrations:
+### Setup Instructions
 
 ```bash
-# From project root:
-npm run db:migrate
+# 1. Clone repository
+git clone https://github.com/alien1611/odooXLPU.git
+cd odooXLPU
 
-# Or directly from backend/:
-cd backend
-npm run db:migrate
-```
-
-The initial migration `001_initial_schema.sql` creates all 18 foundational tables:
-- `users`, `password_resets`
-- `categories`, `uom`, `warehouses`, `locations`
-- `products`, `lots`
-- `stock_moves`, `stock_quants`, `cost_layers`
-- `receipts`, `receipt_lines`
-- `deliveries`, `delivery_lines`
-- `adjustments`, `reorder_suggestions`, `audit_log`
-
----
-
-## 8. Development Commands
-
-### Install All Dependencies
-From the repository root:
-```bash
+# 2. Install all dependencies
 npm run install:all
-```
 
-### Start Full Development Environment (Backend + Frontend)
-Runs the Express API on `http://localhost:5000` and Vite dev server on `http://localhost:3000` concurrently:
-```bash
+# 3. Environment configuration
+cp backend/.env.example backend/.env
+# Edit backend/.env if needed (PORT=5000, DATABASE_URL=postgresql://postgres:postgres@localhost:5432/stockyard)
+
+# 4. Database Migrations
+npm run db:migrate
+
+# 5. Run automated test suites
+npm test
+
+# 6. Start development servers
 npm run dev
 ```
 
-### Run Individually
-- **Backend Only:**
-  ```bash
-  npm run dev:backend
-  ```
-- **Frontend Only:**
-  ```bash
-  npm run dev:frontend
-  ```
+The frontend will run at `http://localhost:5173` and the backend at `http://localhost:5000`.
 
-### Build Frontend for Production
+---
+
+## 7. Automated Test Suites
+
 ```bash
-npm run build:frontend
-```
+# Run both Phase 2 and Phase 3 suites
+npm test
 
-### Health Check Endpoint
-Once the backend is running, verify the health status:
-```bash
-curl http://localhost:5000/api/health
-```
-Response:
-```json
-{
-  "status": "ok",
-  "service": "stockyard-api",
-  "database": "connected",
-  "timestamp": "2026-09-26T06:28:24.088Z",
-  "uptime": 12.34
-}
+# Run Phase 2 suite (Auth, RBAC, Master Data)
+npm run test:phase2 --prefix backend
+
+# Run Phase 3 suite (Core Stock Engine, FEFO, Costing, Transfers, Adjustments)
+npm run test:phase3 --prefix backend
 ```
 
 ---
 
-## 9. Inventory Architecture Principle
+## 8. Implementation Roadmap
 
-### **`stock_moves` is the immutable single source of truth for inventory changes.**
-
-Application code must **never** directly mutate physical inventory counts without creating and confirming a corresponding `stock_moves` record.
-
-- **`stock_moves` (Immutable Ledger):** Records every physical movement: source location, destination location, product, lot, quantity, unit cost, timestamp, and authorizing document/user. Completed moves are immutable.
-- **`stock_quants` (Cached Current State):** Materialized view of on-hand inventory per product, warehouse location, and lot. Updated atomically when a stock move transitions to `done`.
-- **`cost_layers` (Inventory Valuation):** Perpetual inventory valuation records established upon inbound receipt confirmation and depleted upon outbound delivery to compute weighted-average cost.
-- **`lots` (Traceability & Expiry):** Associates specific manufacturing/vendor batches with strict expiry dates used by FEFO dispatch algorithms.
+- [x] **Phase 1:** Foundation, Schema Migrations (001), Relational Models, Pool Health
+- [x] **Phase 2:** Authentication (bcrypt, JWT), Demo OTP Resets, RBAC, Master Data CRUD (Products, Warehouses, Locations, Categories, UoM)
+- [x] **Phase 3:** Core Stock Engine, Immutable Ledger (`stock_moves`), FEFO Consumption, Weighted-Average Costing Layers, Transfers, Adjustments
+- [ ] **Phase 4:** Consumption-Based Reorder Suggestions & Expiry Risk Analytics ($d \times L + SS$)
+- [ ] **Phase 5:** Production Polish, Seed Data, Demo Rehearsal
 
 ---
 
-## 10. Authentication, RBAC & Master Data (Phase 2 Implemented)
-
-### Authentication Endpoints
-- `POST /api/auth/signup` — Registers new user (`name`, `email`, `password`, `role`). Returns JWT + user identity.
-- `POST /api/auth/login` — Authenticates email & password using bcrypt. Returns JWT.
-- `POST /api/auth/request-otp` — Generates 6-digit OTP stored in `password_resets` with 15-minute expiry.
-  * *Demo Mode Notice:* Returns `demo_otp` on-screen without requiring external email/SMS providers.
-- `POST /api/auth/reset-password` — Validates OTP, single-use check, and updates password hash.
-- `GET /api/auth/me` — Returns active user profile from Bearer token.
-
-### Role-Based Access Control (RBAC) Permission Model
-Stockyard enforces a clear, pragmatic two-role model:
-
-| Role | Master Data Management | Inventory & Ledger Views | Operational Document Creation | System Configuration |
-| :--- | :---: | :---: | :---: | :---: |
-| **`inventory_manager`** (or `admin`) | **Full (Create/Edit)** | **Full Access** | **Full (Receipts/Deliveries/Adjustments)** | **Full Access** |
-| **`warehouse_staff`** | Read-Only | Read-Only | Operational Execution Only | Restricted |
-
-All master data mutation endpoints (`POST /api/categories`, `POST /api/uom`, `POST /api/warehouses`, `POST /api/locations`, `POST /api/products`) enforce `requireManager`. Attempted mutation by `warehouse_staff` yields `403 FORBIDDEN`.
-
-### Master Data APIs
-All endpoints require Bearer JWT authentication:
-- `GET /api/categories` & `POST /api/categories` (name required, duplicate rejection, hierarchy support)
-- `GET /api/uom` & `POST /api/uom` (name required, `conversion_to_base > 0`)
-- `GET /api/warehouses` & `POST /api/warehouses` (name required, auto-generated code, unique code)
-- `GET /api/locations` & `POST /api/locations` (`warehouse_id` required, name required, `parent_location_id` hierarchy)
-- `GET /api/products` & `POST /api/products` (name required, unique SKU, valid `category_id` and `uom_id` foreign keys, `reorder_point >= 0`, `lead_time_days >= 0`)
-
----
-
-## 11. Upcoming Implementation Phases
-
-- **Phase 3 — Core Stock Engine:** Receipt → Lot → Cost Layer → Stock Move → Stock Quant, followed by FEFO delivery, transfers and adjustments.
-- **Phase 4 — FEFO & Batch Engine:** Expiration alerts, batch allocation algorithms, and First-Expiry-First-Out reservation.
-- **Phase 5 — Inbound Receipts & Outbound Deliveries:** Goods receipt processing with cost layer generation; customer order fulfillment with automated FEFO picking.
-- **Phase 6 — Adjustments & Physical Inventory Reconciliation:** Cycle counts, variance calculations, and balanced inventory loss/gain stock moves.
-- **Phase 7 — Consumption-Based Reorders:** Automated replenishment calculation engine based on historical move consumption and min/max levels.
-
+*Stockyard ERP — Modern Warehouse Logistics Engine.*
