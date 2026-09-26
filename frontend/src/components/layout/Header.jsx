@@ -36,19 +36,19 @@ export default function Header() {
   };
 
   return (
-    <header className="h-14 bg-white/70 backdrop-blur-xl border-b border-black/[0.06] px-5 sm:px-7 flex items-center justify-between shrink-0 select-none z-20">
+    <header className="h-14 bg-white/95 backdrop-blur-xl border-b border-slate-200 px-5 sm:px-7 flex items-center justify-between shrink-0 select-none z-20">
       {/* Left: Active Facility & Engine Rules */}
       <div className="flex items-center gap-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/80 border border-black/[0.06] rounded-full text-xs font-medium text-neutral-700 shadow-2xs">
-          <Warehouse className="w-3.5 h-3.5 text-neutral-500 stroke-[1.8]" />
-          <span>Warehouse: <strong className="font-semibold text-neutral-900">WH-MAIN</strong></span>
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 border border-slate-200 rounded-full text-xs font-medium text-slate-800 shadow-2xs">
+          <Warehouse className="w-3.5 h-3.5 text-slate-600 stroke-[1.8]" />
+          <span>Warehouse: <strong className="font-bold text-slate-950">WH-MAIN</strong></span>
         </div>
 
-        <div className="hidden lg:flex items-center gap-2 text-xs text-neutral-400">
-          <span className="w-1 h-1 rounded-full bg-neutral-300" />
-          <span>Costing: <strong className="text-neutral-600 font-medium">Weighted Average</strong></span>
-          <span className="w-1 h-1 rounded-full bg-neutral-300" />
-          <span>Allocation: <strong className="text-neutral-600 font-medium">FEFO Engine</strong></span>
+        <div className="hidden lg:flex items-center gap-2 text-xs text-slate-500 font-medium">
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+          <span>Costing: <strong className="text-slate-800 font-semibold">Weighted Average</strong></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+          <span>Allocation: <strong className="text-slate-800 font-semibold">FEFO Engine</strong></span>
         </div>
       </div>
 
@@ -60,7 +60,7 @@ export default function Header() {
             variant="secondary"
             size="sm"
             icon={Scan}
-            className="text-neutral-700 hover:text-amber-800"
+            className="text-slate-800 hover:text-amber-700 font-semibold"
           >
             <span className="hidden sm:inline">Scanner Station</span>
           </Button>
@@ -70,36 +70,36 @@ export default function Header() {
         <button
           onClick={fetchHealth}
           title="Click to refresh system connection status"
-          className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-black/[0.06] bg-white/60 hover:bg-white text-xs font-mono transition-colors shadow-2xs"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-xs font-mono transition-colors shadow-2xs"
         >
           {loading ? (
-            <RefreshCw className="w-3 h-3 text-neutral-400 animate-spin" />
+            <RefreshCw className="w-3 h-3 text-slate-500 animate-spin" />
           ) : health.status === 'online' ? (
             <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
           ) : (
             <span className="w-2 h-2 rounded-full bg-amber-500" />
           )}
 
-          <span className="text-[11px] text-neutral-600 hidden sm:inline">
-            API: <strong className={health.status === 'online' ? 'text-emerald-700' : 'text-amber-700'}>{health.status.toUpperCase()}</strong>
+          <span className="text-[11px] text-slate-700 font-medium hidden sm:inline">
+            API: <strong className={health.status === 'online' ? 'text-emerald-700 font-bold' : 'text-amber-700 font-bold'}>{health.status.toUpperCase()}</strong>
           </span>
         </button>
 
         {/* User Identity & Logout */}
-        <div className="flex items-center gap-2 pl-2 border-l border-neutral-200/80">
+        <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
           <Link
             to="/settings"
             title="System Settings"
-            className="flex items-center gap-2 p-1 pr-2.5 rounded-full hover:bg-white/80 border border-transparent hover:border-black/[0.05] transition-all"
+            className="flex items-center gap-2 p-1 pr-2.5 rounded-full hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all"
           >
-            <div className="w-6 h-6 rounded-full bg-neutral-900 text-white flex items-center justify-center text-[10px] font-semibold font-mono tracking-wider">
+            <div className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold font-mono tracking-wider">
               {getInitials(user?.name)}
             </div>
             <div className="hidden md:block text-left">
-              <div className="text-xs font-medium text-neutral-900 leading-none truncate max-w-[110px]">
+              <div className="text-xs font-bold text-slate-900 leading-none truncate max-w-[110px]">
                 {user?.name || 'Operator'}
               </div>
-              <div className="text-[9px] text-neutral-400 font-mono mt-0.5 capitalize">
+              <div className="text-[10px] text-slate-500 font-mono mt-0.5 capitalize font-medium">
                 {user?.role?.replace('_', ' ') || 'staff'}
               </div>
             </div>
@@ -110,7 +110,7 @@ export default function Header() {
             size="sm"
             onClick={logout}
             title="Log Out"
-            className="p-1.5 rounded-full text-neutral-400 hover:text-rose-600 hover:bg-rose-50/80"
+            className="p-1.5 rounded-full text-slate-500 hover:text-rose-600 hover:bg-rose-50"
           >
             <LogOut className="w-3.5 h-3.5" />
           </Button>

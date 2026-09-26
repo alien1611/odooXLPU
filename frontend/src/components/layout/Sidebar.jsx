@@ -53,9 +53,9 @@ const masterDataItems = [
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-white/70 backdrop-blur-2xl text-neutral-800 flex flex-col shrink-0 border-r border-black/[0.06] select-none z-20">
+    <aside className="w-64 bg-white/95 backdrop-blur-2xl text-slate-800 flex flex-col shrink-0 border-r border-slate-200 select-none z-20">
       {/* Brand Header with Apple-style Logo */}
-      <div className="h-14 flex items-center px-5 border-b border-black/[0.06] bg-white/40">
+      <div className="h-14 flex items-center px-5 border-b border-slate-200 bg-white">
         <Logo size="md" showWordmark={true} />
       </div>
 
@@ -63,7 +63,7 @@ export default function Sidebar() {
       <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
         {/* Operations */}
         <div>
-          <div className="px-3 pb-1.5 text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
+          <div className="px-3 pb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
             Warehouse Operations
           </div>
           <div className="space-y-0.5">
@@ -75,10 +75,10 @@ export default function Sidebar() {
                   to={item.to}
                   end={item.to === '/'}
                   className={({ isActive }) =>
-                    `flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 ${
+                    `flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 ${
                       isActive
                         ? 'bg-amber-600 text-white font-semibold shadow-xs'
-                        : 'text-neutral-600 hover:bg-neutral-100/80 hover:text-neutral-900'
+                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950 font-medium'
                     }`
                   }
                 >
@@ -92,7 +92,7 @@ export default function Sidebar() {
 
         {/* Master Data */}
         <div>
-          <div className="px-3 pb-1.5 text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
+          <div className="px-3 pb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
             Master Data
           </div>
           <div className="space-y-0.5">
@@ -103,10 +103,10 @@ export default function Sidebar() {
                   key={item.to}
                   to={item.to}
                   className={({ isActive }) =>
-                    `flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 ${
+                    `flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 ${
                       isActive
                         ? 'bg-amber-600 text-white font-semibold shadow-xs'
-                        : 'text-neutral-600 hover:bg-neutral-100/80 hover:text-neutral-900'
+                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950 font-medium'
                     }`
                   }
                 >
@@ -120,12 +120,12 @@ export default function Sidebar() {
       </nav>
 
       {/* Engine Status / System Core Footer */}
-      <div className="p-3.5 border-t border-black/[0.06] bg-white/40">
-        <div className="flex items-center gap-2 px-2 py-1 text-xs text-neutral-500">
+      <div className="p-3.5 border-t border-slate-200 bg-slate-50/80">
+        <div className="flex items-center gap-2 px-2 py-1 text-xs text-slate-600">
           <Database className="w-3.5 h-3.5 text-amber-600 shrink-0 stroke-[1.8]" />
           <div className="truncate">
-            <p className="text-[11px] font-medium text-neutral-800 leading-tight">PostgreSQL Engine</p>
-            <p className="text-[10px] text-neutral-400 font-mono">Immutable Moves</p>
+            <p className="text-[11px] font-semibold text-slate-900 leading-tight">PostgreSQL Engine</p>
+            <p className="text-[10px] text-slate-500 font-mono">Immutable Moves</p>
           </div>
         </div>
       </div>
