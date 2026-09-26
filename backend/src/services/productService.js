@@ -186,7 +186,49 @@ async function createProduct({
   return newProduct;
 }
 
+/**
+ * Get product by ID with current on-hand and reserved quantity.
+ */
+async function getProductById(id) {
+  const sql = `
+    SELECT 
+      p.id, 
+      p.sku, 
+      p.name, 
+      p.barcode, 
+      p.category_id, 
+      c.name AS category_name,
+      p.uom_id, 
+      u.name AS uom_name,
+      u.code AS uom_code,
+      p.tracking_type, 
+      p.cost_price, 
+      p.sale_price, 
+      p.reorder_point, 
+      p.lead_time_days, 
+      p.min_stock_level,
+      p.max_stock_level,
+      p.is_active, 
+      p.created_at, 
+      p.updated_at,
+      COALESCE(SUM(sq.quantity), 0) AS on_hand_qty,
+      COALESCE(SUM(sq.reserved_quantity), 0) AS reserved_qty
+    FROM products p
+    JOIN uom u ON p.uom_id = u.id
+    LEFT JOIN categories c ON p.category_id = c.id
+    LEFT JOIN stock_quants sq ON sq.product_id = p.id
+    WHERE p.id = $1
+    GROUP BY p.id, p.sku, p.name, p.barcode, p.category_id, c.name, p.uom_id, u.name, u.code, p.tracking_type, p.cost_price, p.sale_price, p.reorder_point, p.lead_time_days, p.min_stock_level, p.max_stock_level, p.is_active, p.created_at, p.updated_at;
+  `;
+  const res = await query(sql, [id]);
+  if (res.rows.length === 0) {
+    throw new AppError('Product not found.', 404, 'NOT_FOUND');
+  }
+  return res.rows[0];
+}
+
 module.exports = {
   listProducts,
+  getProductById,
   createProduct
 };

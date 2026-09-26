@@ -29,6 +29,22 @@ router.get('/', async (req, res, next) => {
 });
 
 /**
+ * GET /api/products/:id
+ */
+router.get('/:id', async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const product = await productService.getProductById(id);
+    res.status(200).json({
+      success: true,
+      data: product
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * POST /api/products
  * Requires inventory_manager or admin
  */

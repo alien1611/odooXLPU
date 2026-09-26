@@ -9,6 +9,7 @@ import {
   ArrowUpFromLine,
   SlidersHorizontal,
   RefreshCw,
+  Repeat,
   Package,
   FolderTree,
   Scale,
@@ -24,6 +25,7 @@ const operationItems = [
   { name: 'Lots & FEFO Expiry', to: '/lots', icon: ShieldAlert },
   { name: 'Inbound Receipts', to: '/receipts', icon: ArrowDownToLine },
   { name: 'Outbound Deliveries', to: '/deliveries', icon: ArrowUpFromLine },
+  { name: 'Internal Transfers', to: '/transfers', icon: Repeat },
   { name: 'Stock Adjustments', to: '/adjustments', icon: SlidersHorizontal },
   { name: 'Reorder Suggestions', to: '/reorders', icon: RefreshCw },
 ];

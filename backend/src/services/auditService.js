@@ -62,6 +62,39 @@ async function logAudit({
   }
 }
 
+/**
+ * List audit logs with user details.
+ */
+async function listAuditLogs({ entityType = null, limit = 100 } = {}) {
+  let sql = `
+    SELECT 
+      a.id, 
+      a.user_id, 
+      u.full_name AS user_name,
+      u.email AS user_email,
+      a.action, 
+      a.entity_type, 
+      a.entity_id, 
+      a.old_values, 
+      a.new_values, 
+      a.ip_address, 
+      a.created_at
+    FROM audit_log a
+    LEFT JOIN users u ON a.user_id = u.id
+  `;
+  const params = [];
+  if (entityType) {
+    params.push(entityType);
+    sql += ` WHERE a.entity_type = $1`;
+  }
+  sql += ` ORDER BY a.id DESC LIMIT $${params.length + 1}`;
+  params.push(limit);
+
+  const res = await query(sql, params);
+  return res.rows;
+}
+
 module.exports = {
-  logAudit
+  logAudit,
+  listAuditLogs
 };

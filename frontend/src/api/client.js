@@ -177,6 +177,92 @@ class ApiClient {
   createProduct(payload) {
     return this.post('/products', payload).then(r => r.data);
   }
+
+  // Phase 3 — Core Stock Engine API
+  getReceipts(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.status) searchParams.append('status', params.status);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/receipts?${qs}` : '/receipts').then(r => r.data || []);
+  }
+
+  getReceiptById(id) {
+    return this.get(`/receipts/${id}`).then(r => r.data);
+  }
+
+  createReceipt(payload) {
+    return this.post('/receipts', payload).then(r => r.data);
+  }
+
+  getDeliveries(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.status) searchParams.append('status', params.status);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/deliveries?${qs}` : '/deliveries').then(r => r.data || []);
+  }
+
+  getDeliveryById(id) {
+    return this.get(`/deliveries/${id}`).then(r => r.data);
+  }
+
+  createDelivery(payload) {
+    return this.post('/deliveries', payload).then(r => r.data);
+  }
+
+  getTransfers(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.product_id) searchParams.append('product_id', params.product_id);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/transfers?${qs}` : '/transfers').then(r => r.data || []);
+  }
+
+  createTransfer(payload) {
+    return this.post('/transfers', payload).then(r => r.data);
+  }
+
+  getAdjustments(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.product_id) searchParams.append('product_id', params.product_id);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/adjustments?${qs}` : '/adjustments').then(r => r.data || []);
+  }
+
+  createAdjustment(payload) {
+    return this.post('/adjustments', payload).then(r => r.data);
+  }
+
+  getQuants(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.product_id) searchParams.append('product_id', params.product_id);
+    if (params.location_id) searchParams.append('location_id', params.location_id);
+    if (params.warehouse_id) searchParams.append('warehouse_id', params.warehouse_id);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/quants?${qs}` : '/quants').then(r => r.data || []);
+  }
+
+  getMoves(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.product_id) searchParams.append('product_id', params.product_id);
+    if (params.move_type) searchParams.append('move_type', params.move_type);
+    if (params.limit) searchParams.append('limit', params.limit);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/moves?${qs}` : '/moves').then(r => r.data || []);
+  }
+
+  getLots(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.product_id) searchParams.append('product_id', params.product_id);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/lots?${qs}` : '/lots').then(r => r.data || []);
+  }
+
+  getAuditLogs(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.entity_type) searchParams.append('entity_type', params.entity_type);
+    if (params.limit) searchParams.append('limit', params.limit);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/audit-logs?${qs}` : '/audit-logs').then(r => r.data || []);
+  }
 }
 
 export const api = new ApiClient();

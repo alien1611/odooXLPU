@@ -17,6 +17,7 @@ import StockMovesPage from './pages/StockMovesPage';
 import LotsPage from './pages/LotsPage';
 import ReceiptsPage from './pages/ReceiptsPage';
 import DeliveriesPage from './pages/DeliveriesPage';
+import TransfersPage from './pages/TransfersPage';
 import AdjustmentsPage from './pages/AdjustmentsPage';
 import ReordersPage from './pages/ReordersPage';
 import SettingsPage from './pages/SettingsPage';
@@ -64,6 +65,7 @@ export default function App() {
             <Route path="lots" element={<LotsPage />} />
             <Route path="receipts" element={<ReceiptsPage />} />
             <Route path="deliveries" element={<DeliveriesPage />} />
+            <Route path="transfers" element={<TransfersPage />} />
             <Route path="adjustments" element={<AdjustmentsPage />} />
             <Route path="reorders" element={<ReordersPage />} />
             <Route path="settings" element={<SettingsPage />} />
