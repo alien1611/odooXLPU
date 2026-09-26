@@ -1,0 +1,26 @@
+{
+  "name": "stockyard",
+  "version": "1.0.0",
+  "description": "Stockyard - Modern Warehouse & Inventory Management System (ERP)",
+  "scripts": {
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "db:migrate": "npm --prefix backend run db:migrate",
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "keywords": [
+    "inventory",
+    "warehouse",
+    "erp",
+    "fefo",
+    "lot-tracking",
+    "weighted-average-costing"
+  ],
+  "author": "Stockyard Team",
+  "license": "ISC"
+}
