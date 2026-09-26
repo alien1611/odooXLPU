@@ -18,6 +18,9 @@ const reorderRoutes = require('./reorders');
 const expiryRoutes = require('./expiry');
 const valuationRoutes = require('./valuation');
 const barcodeRoutes = require('./barcodes');
+const waveRoutes = require('./waves');
+const replenishmentRoutes = require('./replenishment');
+const crossDockRoutes = require('./crossDock');
 
 const router = express.Router();
 
@@ -51,6 +54,11 @@ router.use('/valuation', valuationRoutes);
 
 // Barcode & Warehouse Operations routes (Phase 5)
 router.use('/barcodes', barcodeRoutes);
+
+// Advanced Warehouse Logistics & Wave Management (Phase 6)
+router.use('/waves', waveRoutes);
+router.use('/replenishment', replenishmentRoutes);
+router.use('/cross-dock', crossDockRoutes);
 
 module.exports = router;
 

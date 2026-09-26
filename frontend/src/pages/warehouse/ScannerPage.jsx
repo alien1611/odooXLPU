@@ -20,7 +20,11 @@ import {
   Calendar,
   AlertTriangle,
   RotateCcw,
-  Boxes
+  Boxes,
+  ArrowUpRight,
+  Play,
+  CheckSquare,
+  Truck
 } from 'lucide-react';
 
 // Web Audio API beep feedback
@@ -108,10 +112,52 @@ export default function ScannerPage() {
   const [ccCountQty, setCcCountQty] = useState('');
   const [ccSubmitting, setCcSubmitting] = useState(false);
 
+  // --- TAB 4: WAVE PICKING STATE ---
+  const [wavesList, setWavesList] = useState([]);
+  const [selectedWaveId, setSelectedWaveId] = useState('');
+  const [activeWaveData, setActiveWaveData] = useState(null);
+  const [waveActionLoading, setWaveActionLoading] = useState(false);
+  const [highlightLocation, setHighlightLocation] = useState(null);
+
+  // --- TAB 5: BIN REPLENISHMENT STATE ---
+  const [replenishTasks, setReplenishTasks] = useState([]);
+  const [selectedReplenishId, setSelectedReplenishId] = useState('');
+  const [replenishTransferQty, setReplenishTransferQty] = useState('');
+  const [replenishActionLoading, setReplenishActionLoading] = useState(false);
+  const [replenishVerified, setReplenishVerified] = useState({ source: false, product: false, dest: false });
+
   // Focus scan input on tab change or mount
   useEffect(() => {
     scanInputRef.current?.focus();
-  }, [activeTab, recvStep, ccStep]);
+  }, [activeTab, recvStep, ccStep, selectedWaveId, selectedReplenishId]);
+
+  useEffect(() => {
+    if (activeTab === 'wave_picking') {
+      api.getWaves().then(data => setWavesList(data)).catch(() => {});
+    } else if (activeTab === 'replenish') {
+      api.getReplenishments().then(data => setReplenishTasks(data)).catch(() => {});
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (selectedWaveId) {
+      api.getWaveById(selectedWaveId)
+        .then(data => setActiveWaveData(data))
+        .catch(err => setErrorMessage(err.message || 'Failed to load wave details.'));
+    } else {
+      setActiveWaveData(null);
+    }
+  }, [selectedWaveId]);
+
+  useEffect(() => {
+    if (selectedReplenishId) {
+      const task = replenishTasks.find(t => t.id === selectedReplenishId);
+      if (task) {
+        setReplenishTransferQty(String(task.suggested_qty || ''));
+        setReplenishVerified({ source: false, product: false, dest: false });
+      }
+    }
+  }, [selectedReplenishId, replenishTasks]);
 
   const clearMessages = () => {
     setErrorMessage(null);
@@ -129,6 +175,34 @@ export default function ScannerPage() {
     setLastScannedCode(code);
 
     try {
+      // Check if code is a Wave reference
+      if (code.toUpperCase().startsWith('WAVE-')) {
+        const waves = await api.getWaves();
+        const found = waves.find(w => w.wave_number.toUpperCase() === code.toUpperCase());
+        if (found) {
+          playSound('success');
+          setActiveTab('wave_picking');
+          setSelectedWaveId(found.id);
+          setScanInput('');
+          setSuccessMessage(`Loaded Pick Wave ${found.wave_number} (${found.status})`);
+          return;
+        }
+      }
+
+      // Check if code is a Replenishment task number
+      if (code.toUpperCase().startsWith('REP-')) {
+        const tasks = await api.getReplenishments();
+        const found = tasks.find(t => t.task_number.toUpperCase() === code.toUpperCase());
+        if (found) {
+          playSound('success');
+          setActiveTab('replenish');
+          setSelectedReplenishId(found.id);
+          setScanInput('');
+          setSuccessMessage(`Loaded Replenishment Task ${found.task_number}`);
+          return;
+        }
+      }
+
       const data = await api.lookupBarcode(code);
       playSound('success');
       setScanInput('');
@@ -141,6 +215,10 @@ export default function ScannerPage() {
         } else {
           setLocationQuants([]);
         }
+      } else if (activeTab === 'wave_picking') {
+        handleWavePickingScan(data);
+      } else if (activeTab === 'replenish') {
+        handleReplenishScan(data);
       } else if (activeTab === 'receiving') {
         handleReceivingScan(data);
       } else if (activeTab === 'cycle_count') {
@@ -153,6 +231,115 @@ export default function ScannerPage() {
     } finally {
       setScanning(false);
       scanInputRef.current?.focus();
+    }
+  };
+
+  // --- WAVE PICKING SCAN HANDLER ---
+  const handleWavePickingScan = (entity) => {
+    if (!activeWaveData) {
+      setErrorMessage('Please select or scan an active Pick Wave first.');
+      return;
+    }
+    if (entity.entity_type === 'location') {
+      const locCode = entity.details?.code || entity.display_name;
+      setHighlightLocation(locCode);
+      setSuccessMessage(`Arrived at Bin Location: ${locCode}. Pick corresponding items.`);
+    } else if (entity.entity_type === 'product' || entity.entity_type === 'lot') {
+      setSuccessMessage(`Scanned item: ${entity.display_name}. Confirm pick quantity.`);
+    }
+  };
+
+  // --- REPLENISH SCAN HANDLER ---
+  const handleReplenishScan = (entity) => {
+    const task = replenishTasks.find(t => t.id === selectedReplenishId);
+    if (!task) {
+      setErrorMessage('Please select a Replenishment Task first.');
+      return;
+    }
+    if (entity.entity_type === 'location') {
+      const locCode = (entity.details?.code || entity.display_name).toUpperCase();
+      if (task.source_location_code && locCode === task.source_location_code.toUpperCase()) {
+        setReplenishVerified(v => ({ ...v, source: true }));
+        setSuccessMessage(`Verified Source Reserve Bin: ${locCode}`);
+      } else if (task.destination_location_code && locCode === task.destination_location_code.toUpperCase()) {
+        setReplenishVerified(v => ({ ...v, dest: true }));
+        setSuccessMessage(`Verified Destination Forward-Pick Bin: ${locCode}`);
+      } else {
+        setErrorMessage(`Scanned location ${locCode} does not match task source (${task.source_location_code}) or destination (${task.destination_location_code}).`);
+      }
+    } else if (entity.entity_type === 'product') {
+      if (entity.entity_id === task.product_id || (entity.details?.sku && entity.details.sku === task.product_sku)) {
+        setReplenishVerified(v => ({ ...v, product: true }));
+        setSuccessMessage(`Verified Product SKU: ${task.product_sku}`);
+      } else {
+        setErrorMessage(`Scanned product does not match task SKU ${task.product_sku}.`);
+      }
+    }
+  };
+
+  const handleStartWave = async () => {
+    if (!selectedWaveId) return;
+    setWaveActionLoading(true);
+    clearMessages();
+    try {
+      await api.startWave(selectedWaveId);
+      playSound('success');
+      setSuccessMessage('Wave status updated to picking. Floor operators can execute pick stops.');
+      const updated = await api.getWaveById(selectedWaveId);
+      setActiveWaveData(updated);
+      const list = await api.getWaves();
+      setWavesList(list);
+    } catch (err) {
+      playSound('error');
+      setErrorMessage(err.message || 'Failed to start wave.');
+    } finally {
+      setWaveActionLoading(false);
+    }
+  };
+
+  const handleCompleteWave = async () => {
+    if (!selectedWaveId) return;
+    setWaveActionLoading(true);
+    clearMessages();
+    try {
+      const res = await api.completeWave(selectedWaveId);
+      playSound('success');
+      setSuccessMessage(`Wave completed! ${res.processed_deliveries?.length || 0} deliveries committed with FEFO allocation.`);
+      const updated = await api.getWaveById(selectedWaveId);
+      setActiveWaveData(updated);
+      const list = await api.getWaves();
+      setWavesList(list);
+    } catch (err) {
+      playSound('error');
+      setErrorMessage(err.message || 'Failed to complete wave.');
+    } finally {
+      setWaveActionLoading(false);
+    }
+  };
+
+  const handleExecuteReplenish = async () => {
+    const task = replenishTasks.find(t => t.id === selectedReplenishId);
+    if (!task) return;
+    const qty = parseFloat(replenishTransferQty || task.suggested_qty);
+    if (!qty || qty <= 0) {
+      setErrorMessage('Please specify a positive transfer quantity.');
+      return;
+    }
+    setReplenishActionLoading(true);
+    clearMessages();
+    try {
+      const res = await api.executeReplenishment(task.id, { transfer_quantity: qty });
+      playSound('success');
+      setSuccessMessage(`Replenishment executed! Transfer ${res.transfer_reference} created (${qty} units moved).`);
+      const updatedTasks = await api.getReplenishments();
+      setReplenishTasks(updatedTasks);
+      setSelectedReplenishId('');
+      setReplenishVerified({ source: false, product: false, dest: false });
+    } catch (err) {
+      playSound('error');
+      setErrorMessage(err.message || 'Failed to execute replenishment.');
+    } finally {
+      setReplenishActionLoading(false);
     }
   };
 
@@ -325,7 +512,7 @@ export default function ScannerPage() {
         </div>
 
         {/* Tab Controls */}
-        <div className="flex bg-slate-200/80 p-1 rounded-lg text-xs font-medium">
+        <div className="flex flex-wrap bg-slate-200/80 p-1 rounded-lg text-xs font-medium gap-1">
           <button
             onClick={() => { setActiveTab('lookup'); clearMessages(); }}
             className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
@@ -336,6 +523,28 @@ export default function ScannerPage() {
           >
             <Search className="w-3.5 h-3.5" />
             Quick Lookup
+          </button>
+          <button
+            onClick={() => { setActiveTab('wave_picking'); clearMessages(); }}
+            className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
+              activeTab === 'wave_picking'
+                ? 'bg-white text-blue-600 font-semibold shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            Wave Picking
+          </button>
+          <button
+            onClick={() => { setActiveTab('replenish'); clearMessages(); }}
+            className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
+              activeTab === 'replenish'
+                ? 'bg-white text-emerald-600 font-semibold shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Truck className="w-3.5 h-3.5" />
+            Bin Replenishment
           </button>
           <button
             onClick={() => { setActiveTab('receiving'); clearMessages(); }}
@@ -599,6 +808,372 @@ export default function ScannerPage() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODE: WAVE PICKING */}
+      {/* ======================================================== */}
+      {activeTab === 'wave_picking' && (
+        <div className="space-y-4">
+          {/* Wave Selector & Action Bar */}
+          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-1">
+              <Layers className="w-5 h-5 text-blue-600 shrink-0" />
+              <div className="flex-1 max-w-md">
+                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                  Active Pick Wave
+                </label>
+                <select
+                  value={selectedWaveId}
+                  onChange={(e) => setSelectedWaveId(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                >
+                  <option value="">-- Select Pick Wave or Scan Barcode --</option>
+                  {wavesList.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.wave_number} &bull; {w.warehouse_code} &bull; {w.status.toUpperCase()} ({w.delivery_count} orders)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => api.getWaves().then(data => setWavesList(data))}
+                className="p-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg text-xs"
+                title="Refresh Waves"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+
+              {(activeWaveData?.status === 'released' || activeWaveData?.wave?.status === 'released') && (
+                <button
+                  type="button"
+                  disabled={waveActionLoading}
+                  onClick={handleStartWave}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors"
+                >
+                  {waveActionLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                  <span>Start Picking Wave</span>
+                </button>
+              )}
+
+              {(activeWaveData?.status === 'picking' || activeWaveData?.wave?.status === 'picking') && (
+                <button
+                  type="button"
+                  disabled={waveActionLoading}
+                  onClick={handleCompleteWave}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors"
+                >
+                  {waveActionLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckSquare className="w-3.5 h-3.5" />}
+                  <span>Complete Wave (FEFO)</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {(() => {
+            const waveObj = activeWaveData?.wave || activeWaveData;
+            const waveLocations = activeWaveData?.location_picks || activeWaveData?.locations || [];
+
+            if (!activeWaveData) {
+              return (
+                <div className="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-500">
+                  <Layers className="w-12 h-12 text-blue-400 mx-auto mb-3" />
+                  <h3 className="font-medium text-slate-700 text-sm">Select or Scan a Pick Wave</h3>
+                  <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                    Scan a wave barcode (e.g. WAVE-2026-0001) or pick an active wave from the dropdown above to begin optimized floor picking.
+                  </p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-4">
+                {/* Wave Summary Info */}
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4 text-xs">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm font-bold text-slate-900">{waveObj?.wave_number}</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        waveObj?.status === 'completed'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : waveObj?.status === 'picking'
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {waveObj?.status}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      Warehouse: <strong className="text-slate-700">{waveObj?.warehouse_name} ({waveObj?.warehouse_code})</strong> &bull; {activeWaveData.deliveries?.length || 0} Delivery Orders Included
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-[11px] text-slate-500">
+                    <div>
+                      <span className="text-slate-400 block uppercase text-[10px]">Pick Stops</span>
+                      <strong className="text-slate-800 font-mono text-xs">{waveLocations.length} Bins</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block uppercase text-[10px]">Total Items</span>
+                      <strong className="text-blue-700 font-mono text-xs">
+                        {waveLocations.reduce((acc, loc) => acc + (loc.items?.length || 0), 0)} Lines
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Optimized Pick Path / Stop Sequence */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-blue-600" />
+                    Optimized Warehouse Pick Path
+                  </h3>
+
+                  {waveLocations.length === 0 ? (
+                    <div className="p-6 bg-white border border-slate-200 rounded-xl text-center text-xs text-slate-400 italic">
+                      No pending pick items found for the deliveries assigned to this wave.
+                    </div>
+                  ) : (
+                    waveLocations.map((loc, idx) => {
+                      const isHighlighted = highlightLocation && highlightLocation.toUpperCase() === loc.location_code.toUpperCase();
+                      return (
+                        <div
+                          key={loc.location_id}
+                          className={`bg-white rounded-xl border transition-all overflow-hidden ${
+                            isHighlighted ? 'border-blue-500 ring-2 ring-blue-400/30 shadow-md' : 'border-slate-200 shadow-2xs'
+                          }`}
+                        >
+                          <div className={`px-4 py-3 border-b flex flex-wrap items-center justify-between gap-2 ${
+                            isHighlighted ? 'bg-blue-50/80 border-blue-200 text-blue-900' : 'bg-slate-50 border-slate-200 text-slate-800'
+                          }`}>
+                            <div className="flex items-center gap-2">
+                              <span className="w-6 h-6 rounded-full bg-slate-200 font-mono text-slate-700 text-xs flex items-center justify-center font-bold">
+                                {idx + 1}
+                              </span>
+                              <MapPin className="w-4 h-4 text-slate-500" />
+                              <span className="font-mono font-bold text-sm">{loc.location_code}</span>
+                              <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-slate-200 text-slate-600">
+                                {loc.location_role || 'general'}
+                              </span>
+                              {isHighlighted && (
+                                <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded animate-pulse">
+                                  Current Bin
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-xs text-slate-500 font-medium">
+                              {loc.items?.length || 0} items at this bin
+                            </span>
+                          </div>
+
+                          <div className="divide-y divide-slate-100 text-xs">
+                            {loc.items?.map((item, itemIdx) => (
+                              <div key={itemIdx} className="p-3 flex items-center justify-between hover:bg-slate-50">
+                                <div>
+                                  <div className="font-semibold text-slate-900">{item.product_name}</div>
+                                  <div className="text-[11px] text-slate-500 font-mono flex items-center gap-2">
+                                    <span>SKU: {item.sku}</span>
+                                    {item.lot_number && (
+                                      <span className="text-amber-700">&bull; Lot: {item.lot_number}</span>
+                                    )}
+                                    <span>&bull; Order: {item.delivery_reference}</span>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <span className="font-mono font-bold text-sm text-slate-900 block">
+                                    {parseFloat(item.quantity_to_pick || item.requested_qty || 0)} {item.uom_code || item.uom_name || 'units'}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400">Pick to cart</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODE: FORWARD BIN REPLENISHMENT */}
+      {/* ======================================================== */}
+      {activeTab === 'replenish' && (
+        <div className="space-y-4">
+          {/* Task Selector & Action Bar */}
+          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-1">
+              <Truck className="w-5 h-5 text-emerald-600 shrink-0" />
+              <div className="flex-1 max-w-md">
+                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                  Active Replenishment Task
+                </label>
+                <select
+                  value={selectedReplenishId}
+                  onChange={(e) => setSelectedReplenishId(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                >
+                  <option value="">-- Select Task or Scan Task/Bin Barcode --</option>
+                  {replenishTasks
+                    .filter((t) => ['ready', 'partially_fulfillable', 'suggested'].includes(t.status))
+                    .map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.task_number} &bull; {t.product_name} &rarr; {t.destination_location_code} ({t.suggested_qty} units)
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => api.getReplenishments().then(data => setReplenishTasks(data))}
+                className="p-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg text-xs"
+                title="Refresh Replenishment Tasks"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {(() => {
+            const task = replenishTasks.find((t) => t.id === selectedReplenishId);
+            if (!task) {
+              return (
+                <div className="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-500">
+                  <Truck className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+                  <h3 className="font-medium text-slate-700 text-sm">Select or Scan a Replenishment Task</h3>
+                  <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                    Select a task above or scan a forward bin barcode needing replenishment. Perform scan-verified stock transfers directly from your terminal.
+                  </p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-6 space-y-6">
+                {/* Task Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-base font-bold text-slate-900">{task.task_number}</span>
+                      <span className="px-2 py-0.5 text-[10px] font-bold rounded uppercase bg-emerald-100 text-emerald-800">
+                        {task.status.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      Warehouse: <strong className="text-slate-700">{task.warehouse_name} ({task.warehouse_code})</strong>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">Suggested Transfer</span>
+                    <span className="font-mono text-xl font-bold text-emerald-700">+{task.suggested_qty} units</span>
+                  </div>
+                </div>
+
+                {/* Transfer Path & Scan Verification Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                  {/* Step A: Source Reserve Bin */}
+                  <div className={`p-4 rounded-xl border transition-all ${
+                    replenishVerified.source ? 'bg-emerald-50/50 border-emerald-300' : 'bg-slate-50 border-slate-200'
+                  }`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold uppercase text-slate-400">1. Source Reserve Bin</span>
+                      {replenishVerified.source ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <span className="text-[10px] text-slate-400 font-mono">Scan bin</span>
+                      )}
+                    </div>
+                    <div className="font-mono font-bold text-slate-900 text-sm">{task.source_location_code || 'Unassigned'}</div>
+                    <div className="text-[11px] text-slate-500 mt-1">
+                      Available Reserve: <strong className="text-slate-800 font-mono">{task.available_reserve_qty || 0}</strong>
+                    </div>
+                  </div>
+
+                  {/* Step B: Product SKU */}
+                  <div className={`p-4 rounded-xl border transition-all ${
+                    replenishVerified.product ? 'bg-emerald-50/50 border-emerald-300' : 'bg-slate-50 border-slate-200'
+                  }`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold uppercase text-slate-400">2. Item SKU</span>
+                      {replenishVerified.product ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <span className="text-[10px] text-slate-400 font-mono">Scan item</span>
+                      )}
+                    </div>
+                    <div className="font-semibold text-slate-900 truncate">{task.product_name}</div>
+                    <div className="text-[11px] text-slate-500 font-mono mt-1">
+                      SKU: <strong className="text-slate-800">{task.product_sku}</strong>
+                    </div>
+                  </div>
+
+                  {/* Step C: Destination Forward Bin */}
+                  <div className={`p-4 rounded-xl border transition-all ${
+                    replenishVerified.dest ? 'bg-emerald-50/50 border-emerald-300' : 'bg-slate-50 border-slate-200'
+                  }`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold uppercase text-slate-400">3. Forward-Pick Bin</span>
+                      {replenishVerified.dest ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <span className="text-[10px] text-slate-400 font-mono">Scan bin</span>
+                      )}
+                    </div>
+                    <div className="font-mono font-bold text-slate-900 text-sm">{task.destination_location_code}</div>
+                    <div className="text-[11px] text-slate-500 mt-1">
+                      Current: <strong className="text-rose-600 font-mono">{task.current_forward_qty}</strong> / Min: {task.threshold_qty}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Transfer Quantity & Confirmation */}
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-semibold text-slate-700 whitespace-nowrap">
+                      Transfer Quantity:
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0.01"
+                      max={task.available_reserve_qty}
+                      value={replenishTransferQty}
+                      onChange={(e) => setReplenishTransferQty(e.target.value)}
+                      className="w-32 px-3 py-1.5 font-mono text-sm font-bold border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                    />
+                    <span className="text-xs text-slate-400">units</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={replenishActionLoading || !parseFloat(replenishTransferQty)}
+                    onClick={handleExecuteReplenish}
+                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors"
+                  >
+                    {replenishActionLoading ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ArrowRight className="w-4 h-4" />
+                    )}
+                    <span>Execute Replenishment Transfer</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 

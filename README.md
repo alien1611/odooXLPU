@@ -170,14 +170,15 @@ The frontend will run at `http://localhost:5173` and the backend at `http://loca
 ## 7. Automated Test Suites
 
 ```bash
-# Run both Phase 2 and Phase 3 suites
+# Run complete test suite (Phases 2 through 6)
 npm test
 
-# Run Phase 2 suite (Auth, RBAC, Master Data)
+# Run individual phase suites
 npm run test:phase2 --prefix backend
-
-# Run Phase 3 suite (Core Stock Engine, FEFO, Costing, Transfers, Adjustments)
 npm run test:phase3 --prefix backend
+npm run test:phase4 --prefix backend
+npm run test:phase5 --prefix backend
+npm run test:phase6 --prefix backend
 ```
 
 ---
@@ -187,8 +188,9 @@ npm run test:phase3 --prefix backend
 - [x] **Phase 1:** Foundation, Schema Migrations (001), Relational Models, Pool Health
 - [x] **Phase 2:** Authentication (bcrypt, JWT), Demo OTP Resets, RBAC, Master Data CRUD (Products, Warehouses, Locations, Categories, UoM)
 - [x] **Phase 3:** Core Stock Engine, Immutable Ledger (`stock_moves`), FEFO Consumption, Weighted-Average Costing Layers, Transfers, Adjustments
-- [ ] **Phase 4:** Consumption-Based Reorder Suggestions & Expiry Risk Analytics ($d \times L + SS$)
-- [ ] **Phase 5:** Production Polish, Seed Data, Demo Rehearsal
+- [x] **Phase 4:** Consumption-Based Reorder Suggestions & Expiry Risk Analytics ($d \times L + SS$)
+- [x] **Phase 5:** Barcode Scanning & Warehouse Operations Workflow
+- [x] **Phase 6:** Advanced Warehouse Logistics & Wave Management (Multi-Location Pick Waves, Forward Bin Replenishment, Inbound Cross-Docking)
 
 ---
 

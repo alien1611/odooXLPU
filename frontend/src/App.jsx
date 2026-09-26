@@ -20,6 +20,9 @@ import DeliveriesPage from './pages/DeliveriesPage';
 import TransfersPage from './pages/TransfersPage';
 import AdjustmentsPage from './pages/AdjustmentsPage';
 import ReordersPage from './pages/ReordersPage';
+import WavesPage from './pages/WavesPage';
+import ReplenishmentPage from './pages/ReplenishmentPage';
+import CrossDockPage from './pages/CrossDockPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ScannerPage from './pages/warehouse/ScannerPage';
@@ -69,6 +72,9 @@ export default function App() {
             <Route path="transfers" element={<TransfersPage />} />
             <Route path="adjustments" element={<AdjustmentsPage />} />
             <Route path="reorders" element={<ReordersPage />} />
+            <Route path="waves" element={<WavesPage />} />
+            <Route path="replenishment" element={<ReplenishmentPage />} />
+            <Route path="cross-dock" element={<CrossDockPage />} />
             <Route path="scanner" element={<ScannerPage />} />
             <Route path="warehouse/scanner" element={<ScannerPage />} />
             <Route path="settings" element={<SettingsPage />} />

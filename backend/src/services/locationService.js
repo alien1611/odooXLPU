@@ -4,10 +4,25 @@ const { AppError } = require('./authService');
 
 const VALID_LOCATION_TYPES = ['internal', 'supplier', 'customer', 'inventory_loss', 'transit'];
 
+async function checkHasLocationRole() {
+  try {
+    const res = await query(
+      "SELECT 1 FROM information_schema.columns WHERE table_name = 'locations' AND column_name = 'location_role'"
+    );
+    return res.rows.length > 0;
+  } catch (err) {
+    return false;
+  }
+}
+
 /**
  * List locations, optionally filtered by warehouse.
  */
 async function listLocations(warehouseId = null) {
+  const hasRoleCol = await checkHasLocationRole();
+  const roleSelect = hasRoleCol ? 'l.location_role,' : "'general'::varchar AS location_role,";
+  const roleGroup = hasRoleCol ? 'l.location_role,' : '';
+
   let sql = `
     SELECT 
       l.id, 
@@ -19,6 +34,7 @@ async function listLocations(warehouseId = null) {
       l.code, 
       l.name, 
       l.type, 
+      ${roleSelect}
       l.barcode, 
       l.is_active, 
       l.created_at,
@@ -36,7 +52,7 @@ async function listLocations(warehouseId = null) {
   }
 
   sql += `
-    GROUP BY l.id, l.warehouse_id, w.name, w.code, l.parent_location_id, pl.name, l.code, l.name, l.type, l.barcode, l.is_active, l.created_at
+    GROUP BY l.id, l.warehouse_id, w.name, w.code, l.parent_location_id, pl.name, l.code, l.name, l.type, ${roleGroup} l.barcode, l.is_active, l.created_at
     ORDER BY w.name ASC, l.name ASC;
   `;
 
@@ -53,6 +69,7 @@ async function createLocation({
   code,
   name,
   type = 'internal',
+  location_role = 'general',
   barcode = null
 }, userId, ipAddress = null) {
   // 1. Validate warehouse_id
@@ -115,20 +132,47 @@ async function createLocation({
     }
   }
 
-  const insertSql = `
-    INSERT INTO locations (warehouse_id, parent_location_id, code, name, type, barcode, is_active, created_at, updated_at)
-    VALUES ($1, $2, $3, $4, $5, $6, TRUE, NOW(), NOW())
-    RETURNING id, warehouse_id, parent_location_id, code, name, type, barcode, is_active, created_at;
-  `;
-  const res = await query(insertSql, [
-    warehouse_id,
-    validParentId,
-    cleanCode,
-    cleanName,
-    cleanType,
-    barcode ? barcode.trim() : null
-  ]);
+  const hasRoleCol = await checkHasLocationRole();
+  let insertSql;
+  let params;
+
+  if (hasRoleCol) {
+    const cleanRole = ['general', 'reserve', 'forward_pick'].includes(location_role) ? location_role : 'general';
+    insertSql = `
+      INSERT INTO locations (warehouse_id, parent_location_id, code, name, type, location_role, barcode, is_active, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, NOW(), NOW())
+      RETURNING id, warehouse_id, parent_location_id, code, name, type, location_role, barcode, is_active, created_at;
+    `;
+    params = [
+      warehouse_id,
+      validParentId,
+      cleanCode,
+      cleanName,
+      cleanType,
+      cleanRole,
+      cleanBarcode
+    ];
+  } else {
+    insertSql = `
+      INSERT INTO locations (warehouse_id, parent_location_id, code, name, type, barcode, is_active, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, TRUE, NOW(), NOW())
+      RETURNING id, warehouse_id, parent_location_id, code, name, type, barcode, is_active, created_at;
+    `;
+    params = [
+      warehouse_id,
+      validParentId,
+      cleanCode,
+      cleanName,
+      cleanType,
+      cleanBarcode
+    ];
+  }
+
+  const res = await query(insertSql, params);
   const newLocation = res.rows[0];
+  if (!newLocation.location_role) {
+    newLocation.location_role = 'general';
+  }
 
   // Audit Log
   await logAudit({

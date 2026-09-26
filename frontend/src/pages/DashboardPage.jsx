@@ -14,7 +14,9 @@ import {
   Package,
   RefreshCw,
   Clock,
-  Boxes
+  Boxes,
+  ArrowUpRight,
+  Zap
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -23,6 +25,9 @@ export default function DashboardPage() {
   const [reorders, setReorders] = useState([]);
   const [expiry, setExpiry] = useState(null);
   const [recentMoves, setRecentMoves] = useState([]);
+  const [waves, setWaves] = useState([]);
+  const [replenishments, setReplenishments] = useState([]);
+  const [crossDockAlerts, setCrossDockAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -30,16 +35,22 @@ export default function DashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const [valData, reorderData, expiryData, movesData] = await Promise.all([
+      const [valData, reorderData, expiryData, movesData, wavesData, replenData, xdockData] = await Promise.all([
         api.getValuationSummary(),
         api.getReorderSuggestions({ status: 'pending' }),
         api.getExpirySummary(),
-        api.getMoves({ limit: 6 })
+        api.getMoves({ limit: 6 }),
+        api.getWaves().catch(() => []),
+        api.getReplenishments().catch(() => []),
+        api.getCrossDockAlerts().catch(() => [])
       ]);
       setValuation(valData);
       setReorders(reorderData);
       setExpiry(expiryData);
       setRecentMoves(movesData);
+      setWaves(wavesData);
+      setReplenishments(replenData);
+      setCrossDockAlerts(xdockData);
     } catch (err) {
       setError(err.message || 'Failed to load live operational KPIs.');
     } finally {
@@ -58,6 +69,12 @@ export default function DashboardPage() {
   ).length;
   const expire7dCount = expiry?.within_7_days_count ?? 0;
   const expiredCount = expiry?.expired_count ?? 0;
+
+  // Phase 6 Operational KPIs
+  const activeWavesCount = waves.filter(w => ['released', 'picking'].includes(w.status)).length;
+  const pendingReplenishmentsCount = replenishments.filter(r => ['ready', 'suggested', 'partially_fulfillable'].includes(r.status)).length;
+  const activeCrossDockCount = crossDockAlerts.filter(a => a.status === 'active').length;
+  const binsBelowThresholdCount = replenishments.filter(r => ['ready', 'partially_fulfillable'].includes(r.status)).length;
 
   return (
     <div className="space-y-6">
@@ -185,6 +202,91 @@ export default function DashboardPage() {
             <Link to="/inventory" className="text-indigo-600 hover:text-indigo-800 font-medium">
               Inspect &rarr;
             </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Warehouse Logistics & Wave Operations (Phase 6) */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-blue-600" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+              Warehouse Logistics & Wave Operations
+            </h2>
+          </div>
+          <span className="text-[11px] text-slate-400 font-medium">Phase 6 Operational Control Room</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Logistics KPI 1: Active Pick Waves */}
+          <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-blue-300 transition-colors">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-xs font-medium">Active Pick Waves</span>
+              <Layers className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="mt-2 text-2xl font-bold text-slate-900 font-mono">
+              {loading ? <span className="text-slate-300">...</span> : activeWavesCount}
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px]">
+              <span className="text-slate-400">{waves.length} total waves</span>
+              <Link to="/waves" className="text-blue-600 hover:text-blue-800 font-medium">
+                Dispatch &rarr;
+              </Link>
+            </div>
+          </div>
+
+          {/* Logistics KPI 2: Replenishment Tasks */}
+          <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-emerald-300 transition-colors">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-xs font-medium">Replenishment Tasks</span>
+              <ArrowUpRight className="w-4 h-4 text-emerald-600" />
+            </div>
+            <div className={`mt-2 text-2xl font-bold font-mono ${pendingReplenishmentsCount > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
+              {loading ? <span className="text-slate-300">...</span> : pendingReplenishmentsCount}
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px]">
+              <span className="text-slate-400">Forward bin tasks</span>
+              <Link to="/replenishment" className="text-emerald-600 hover:text-emerald-800 font-medium">
+                Replenish &rarr;
+              </Link>
+            </div>
+          </div>
+
+          {/* Logistics KPI 3: Cross-Dock Alerts */}
+          <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-rose-300 transition-colors">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-xs font-medium">Cross-Dock Alerts</span>
+              <Zap className={`w-4 h-4 ${activeCrossDockCount > 0 ? 'text-rose-600' : 'text-indigo-500'}`} />
+            </div>
+            <div className={`mt-2 text-2xl font-bold font-mono ${activeCrossDockCount > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
+              {loading ? <span className="text-slate-300">...</span> : activeCrossDockCount}
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px]">
+              <span className={activeCrossDockCount > 0 ? 'text-rose-600 font-medium' : 'text-slate-400'}>
+                {activeCrossDockCount > 0 ? 'Urgent stage demand' : 'No active alerts'}
+              </span>
+              <Link to="/cross-dock" className="text-indigo-600 hover:text-indigo-800 font-medium">
+                Stage &rarr;
+              </Link>
+            </div>
+          </div>
+
+          {/* Logistics KPI 4: Forward Bins Below Threshold */}
+          <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-amber-300 transition-colors">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-xs font-medium">Forward Bins Below Min</span>
+              <AlertTriangle className={`w-4 h-4 ${binsBelowThresholdCount > 0 ? 'text-amber-500' : 'text-slate-400'}`} />
+            </div>
+            <div className={`mt-2 text-2xl font-bold font-mono ${binsBelowThresholdCount > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
+              {loading ? <span className="text-slate-300">...</span> : binsBelowThresholdCount}
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px]">
+              <span className="text-slate-400">Needs pick face refill</span>
+              <Link to="/replenishment" className="text-amber-600 hover:text-amber-800 font-medium">
+                Configure &rarr;
+              </Link>
+            </div>
           </div>
         </div>
       </div>

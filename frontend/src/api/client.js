@@ -344,6 +344,98 @@ class ApiClient {
   getLocationInventory(locationId) {
     return this.get(`/barcodes/location-inventory/${locationId}`).then(r => r.data || []);
   }
+
+  // Phase 6 — Advanced Warehouse Logistics & Wave Management
+  getWaves(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.warehouse_id) searchParams.append('warehouse_id', params.warehouse_id);
+    if (params.status) searchParams.append('status', params.status);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/waves?${qs}` : '/waves').then(r => r.data || []);
+  }
+
+  getWaveById(id) {
+    return this.get(`/waves/${id}`).then(r => r.data);
+  }
+
+  createWave(payload) {
+    return this.post('/waves', payload).then(r => r.data);
+  }
+
+  releaseWave(id) {
+    return this.post(`/waves/${id}/release`, {}).then(r => r.data);
+  }
+
+  startWave(id) {
+    return this.post(`/waves/${id}/start`, {}).then(r => r.data);
+  }
+
+  completeWave(id) {
+    return this.post(`/waves/${id}/complete`, {}).then(r => r.data);
+  }
+
+  cancelWave(id) {
+    return this.post(`/waves/${id}/cancel`, {}).then(r => r.data);
+  }
+
+  addDeliveriesToWave(id, payload) {
+    return this.post(`/waves/${id}/deliveries`, payload).then(r => r.data);
+  }
+
+  removeDeliveryFromWave(id, deliveryId) {
+    return this.delete(`/waves/${id}/deliveries/${deliveryId}`);
+  }
+
+  getReplenishments(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.warehouse_id) searchParams.append('warehouse_id', params.warehouse_id);
+    if (params.status) searchParams.append('status', params.status);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/replenishment?${qs}` : '/replenishment').then(r => r.data || []);
+  }
+
+  getReplenishmentConfigs(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.warehouse_id) searchParams.append('warehouse_id', params.warehouse_id);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/replenishment/configs?${qs}` : '/replenishment/configs').then(r => r.data || []);
+  }
+
+  setReplenishmentConfig(payload) {
+    return this.post('/replenishment/configs', payload).then(r => r.data);
+  }
+
+  generateReplenishments(payload = {}) {
+    return this.post('/replenishment/generate', payload).then(r => r.data);
+  }
+
+  executeReplenishment(id, payload = {}) {
+    return this.post(`/replenishment/${id}/execute`, payload).then(r => r.data);
+  }
+
+  dismissReplenishment(id) {
+    return this.post(`/replenishment/${id}/dismiss`, {}).then(r => r.data);
+  }
+
+  getCrossDockAlerts(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.warehouse_id) searchParams.append('warehouse_id', params.warehouse_id);
+    if (params.status) searchParams.append('status', params.status);
+    const qs = searchParams.toString();
+    return this.get(qs ? `/cross-dock?${qs}` : '/cross-dock').then(r => r.data || []);
+  }
+
+  scanCrossDock(payload = {}) {
+    return this.post('/cross-dock/scan', payload).then(r => r.data);
+  }
+
+  acknowledgeCrossDock(id) {
+    return this.post(`/cross-dock/${id}/acknowledge`, {}).then(r => r.data);
+  }
+
+  dismissCrossDock(id) {
+    return this.post(`/cross-dock/${id}/dismiss`, {}).then(r => r.data);
+  }
 }
 
 export const api = new ApiClient();

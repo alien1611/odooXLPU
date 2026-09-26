@@ -228,12 +228,28 @@ async function createReceipt({
       client
     });
 
-    // 9. Atomically Commit
+    // 9. Check Cross-Docking Opportunities (without mutating stock)
+    let crossDockAlerts = [];
+    if (auto_process) {
+      try {
+        const { checkCrossDockOpportunities } = require('./crossDockService');
+        crossDockAlerts = await checkCrossDockOpportunities(client, {
+          receiptId: receipt.id,
+          lines: processedLines,
+          warehouseId: destination_warehouse_id
+        });
+      } catch (xdErr) {
+        console.warn('[CROSS-DOCK] Opportunity check skipped:', xdErr.message);
+      }
+    }
+
+    // 10. Atomically Commit
     await client.query('COMMIT');
 
     return {
       ...receipt,
-      lines: processedLines
+      lines: processedLines,
+      cross_dock_alerts: crossDockAlerts
     };
   } catch (err) {
     await client.query('ROLLBACK');

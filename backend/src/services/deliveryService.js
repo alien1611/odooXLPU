@@ -114,96 +114,98 @@ async function createDelivery({
         );
       }
 
-      // 4. FEFO Lot Allocation Query with Row-Level Locks
+      // 4. FEFO Lot Allocation Query with Row-Level Locks (if auto_process)
       let candidateQuants = [];
-
-      if (product.tracking_type === 'lot') {
-        // Enforce FEFO: Earliest expiry date first, secondary order by lot ID
-        const fefoSql = `
-          SELECT 
-            sq.id AS quant_id,
-            sq.location_id,
-            sq.lot_id,
-            sq.quantity,
-            sq.reserved_quantity,
-            (sq.quantity - sq.reserved_quantity) AS available_quantity,
-            l.lot_number,
-            l.expiry_date
-          FROM stock_quants sq
-          JOIN lots l ON sq.lot_id = l.id
-          WHERE sq.product_id = $1 
-            AND sq.location_id = $2
-            AND (sq.quantity - sq.reserved_quantity) > 0
-          ORDER BY l.expiry_date ASC, l.id ASC
-          FOR UPDATE;
-        `;
-        const quantRes = await client.query(fefoSql, [pId, locId]);
-        candidateQuants = quantRes.rows;
-      } else {
-        // Standard non-lot tracked
-        const nonLotSql = `
-          SELECT 
-            sq.id AS quant_id,
-            sq.location_id,
-            sq.lot_id,
-            sq.quantity,
-            sq.reserved_quantity,
-            (sq.quantity - sq.reserved_quantity) AS available_quantity,
-            NULL AS lot_number,
-            NULL AS expiry_date
-          FROM stock_quants sq
-          WHERE sq.product_id = $1 
-            AND sq.location_id = $2
-            AND (sq.quantity - sq.reserved_quantity) > 0
-          ORDER BY sq.id ASC
-          FOR UPDATE;
-        `;
-        const quantRes = await client.query(nonLotSql, [pId, locId]);
-        candidateQuants = quantRes.rows;
-      }
-
-      // Check total available stock across candidate quants
-      const totalAvailable = candidateQuants.reduce((sum, q) => sum + parseFloat(q.available_quantity), 0);
-
-      if (totalAvailable < requestedQty) {
-        throw new AppError(
-          `Insufficient stock for product "${product.name}" (SKU: ${product.sku}). Requested: ${requestedQty}, Available at location: ${totalAvailable}.`,
-          400,
-          'INSUFFICIENT_STOCK'
-        );
-      }
-
-      // 5. Greedily Consume Stock According to FEFO Sort Order
-      let remainingToConsume = requestedQty;
       const lineAllocations = [];
 
-      for (const quant of candidateQuants) {
-        if (remainingToConsume <= 0) break;
+      if (auto_process) {
+        if (product.tracking_type === 'lot') {
+          // Enforce FEFO: Earliest expiry date first, secondary order by lot ID
+          const fefoSql = `
+            SELECT 
+              sq.id AS quant_id,
+              sq.location_id,
+              sq.lot_id,
+              sq.quantity,
+              sq.reserved_quantity,
+              (sq.quantity - sq.reserved_quantity) AS available_quantity,
+              l.lot_number,
+              l.expiry_date
+            FROM stock_quants sq
+            JOIN lots l ON sq.lot_id = l.id
+            WHERE sq.product_id = $1 
+              AND sq.location_id = $2
+              AND (sq.quantity - sq.reserved_quantity) > 0
+            ORDER BY l.expiry_date ASC, l.id ASC
+            FOR UPDATE;
+          `;
+          const quantRes = await client.query(fefoSql, [pId, locId]);
+          candidateQuants = quantRes.rows;
+        } else {
+          // Standard non-lot tracked
+          const nonLotSql = `
+            SELECT 
+              sq.id AS quant_id,
+              sq.location_id,
+              sq.lot_id,
+              sq.quantity,
+              sq.reserved_quantity,
+              (sq.quantity - sq.reserved_quantity) AS available_quantity,
+              NULL AS lot_number,
+              NULL AS expiry_date
+            FROM stock_quants sq
+            WHERE sq.product_id = $1 
+              AND sq.location_id = $2
+              AND (sq.quantity - sq.reserved_quantity) > 0
+            ORDER BY sq.id ASC
+            FOR UPDATE;
+          `;
+          const quantRes = await client.query(nonLotSql, [pId, locId]);
+          candidateQuants = quantRes.rows;
+        }
 
-        const avail = parseFloat(quant.available_quantity);
-        const takeQty = Math.round(Math.min(avail, remainingToConsume) * 10000) / 10000;
+        // Check total available stock across candidate quants
+        const totalAvailable = candidateQuants.reduce((sum, q) => sum + parseFloat(q.available_quantity), 0);
 
-        lineAllocations.push({
-          productId: pId,
-          productName: product.name,
-          sku: product.sku,
-          quantId: quant.quant_id,
-          lotId: quant.lot_id,
-          lotNumber: quant.lot_number || 'Non-Lot Tracked',
-          expiryDate: quant.expiry_date,
-          quantity: takeQty,
-          locationId: locId
-        });
+        if (totalAvailable < requestedQty) {
+          throw new AppError(
+            `Insufficient stock for product "${product.name}" (SKU: ${product.sku}). Requested: ${requestedQty}, Available at location: ${totalAvailable}.`,
+            400,
+            'INSUFFICIENT_STOCK'
+          );
+        }
 
-        remainingToConsume = Math.round((remainingToConsume - takeQty) * 10000) / 10000;
-      }
+        // 5. Greedily Consume Stock According to FEFO Sort Order
+        let remainingToConsume = requestedQty;
 
-      if (remainingToConsume > 0) {
-        throw new AppError(
-          `Failed to fully allocate inventory for "${product.name}". Remaining unallocated: ${remainingToConsume}.`,
-          400,
-          'ALLOCATION_FAILURE'
-        );
+        for (const quant of candidateQuants) {
+          if (remainingToConsume <= 0) break;
+
+          const avail = parseFloat(quant.available_quantity);
+          const takeQty = Math.round(Math.min(avail, remainingToConsume) * 10000) / 10000;
+
+          lineAllocations.push({
+            productId: pId,
+            productName: product.name,
+            sku: product.sku,
+            quantId: quant.quant_id,
+            lotId: quant.lot_id,
+            lotNumber: quant.lot_number || 'Non-Lot Tracked',
+            expiryDate: quant.expiry_date,
+            quantity: takeQty,
+            locationId: locId
+          });
+
+          remainingToConsume = Math.round((remainingToConsume - takeQty) * 10000) / 10000;
+        }
+
+        if (remainingToConsume > 0) {
+          throw new AppError(
+            `Failed to fully allocate inventory for "${product.name}". Remaining unallocated: ${remainingToConsume}.`,
+            400,
+            'ALLOCATION_FAILURE'
+          );
+        }
       }
 
       // 6. Record Delivery Line
@@ -394,8 +396,217 @@ async function getDeliveryById(deliveryId) {
   };
 }
 
+/**
+ * Process a pending/draft delivery order using authoritative FEFO allocation.
+ * Can be called standalone or within an existing database transaction client.
+ */
+async function processDelivery(deliveryId, userId, ipAddress = null, externalClient = null) {
+  const dId = parseInt(deliveryId, 10);
+  const client = externalClient || (await pool.connect());
+  const manageTx = !externalClient;
+
+  try {
+    if (manageTx) await client.query('BEGIN');
+
+    // 1. Lock delivery
+    const dRes = await client.query(
+      'SELECT id, reference, customer_name, source_warehouse_id, status FROM deliveries WHERE id = $1 FOR UPDATE',
+      [dId]
+    );
+    if (dRes.rows.length === 0) {
+      throw new AppError('Delivery not found.', 404, 'NOT_FOUND');
+    }
+    const delivery = dRes.rows[0];
+
+    if (delivery.status === 'done') {
+      if (manageTx) await client.query('COMMIT');
+      return delivery;
+    }
+    if (delivery.status === 'cancelled') {
+      throw new AppError('Cannot process a cancelled delivery order.', 400, 'INVALID_STATE');
+    }
+
+    // 2. Fetch lines
+    const linesRes = await client.query(
+      'SELECT id, product_id, requested_qty, src_location_id FROM delivery_lines WHERE delivery_id = $1 ORDER BY id ASC',
+      [dId]
+    );
+    if (linesRes.rows.length === 0) {
+      throw new AppError('Delivery has no order lines.', 400, 'VALIDATION_ERROR');
+    }
+
+    const allAllocations = [];
+
+    // 3. For each line, perform authoritative FEFO allocation
+    for (const line of linesRes.rows) {
+      const pId = parseInt(line.product_id, 10);
+      const locId = parseInt(line.src_location_id, 10);
+      const requestedQty = parseFloat(line.requested_qty);
+
+      const prodRes = await client.query(
+        'SELECT id, name, sku, uom_id, tracking_type, cost_price FROM products WHERE id = $1 FOR UPDATE',
+        [pId]
+      );
+      if (prodRes.rows.length === 0) {
+        throw new AppError(`Product ID ${pId} not found.`, 404, 'NOT_FOUND');
+      }
+      const product = prodRes.rows[0];
+
+      let candidateQuants = [];
+      if (product.tracking_type === 'lot') {
+        const fefoSql = `
+          SELECT 
+            sq.id AS quant_id,
+            sq.location_id,
+            sq.lot_id,
+            sq.quantity,
+            sq.reserved_quantity,
+            (sq.quantity - sq.reserved_quantity) AS available_quantity,
+            l.lot_number,
+            l.expiry_date
+          FROM stock_quants sq
+          JOIN lots l ON sq.lot_id = l.id
+          WHERE sq.product_id = $1 
+            AND sq.location_id = $2
+            AND (sq.quantity - sq.reserved_quantity) > 0
+          ORDER BY l.expiry_date ASC, l.id ASC
+          FOR UPDATE;
+        `;
+        const qRes = await client.query(fefoSql, [pId, locId]);
+        candidateQuants = qRes.rows;
+      } else {
+        const nonLotSql = `
+          SELECT 
+            sq.id AS quant_id,
+            sq.location_id,
+            sq.lot_id,
+            sq.quantity,
+            sq.reserved_quantity,
+            (sq.quantity - sq.reserved_quantity) AS available_quantity,
+            NULL AS lot_number,
+            NULL AS expiry_date
+          FROM stock_quants sq
+          WHERE sq.product_id = $1 
+            AND sq.location_id = $2
+            AND (sq.quantity - sq.reserved_quantity) > 0
+          ORDER BY sq.id ASC
+          FOR UPDATE;
+        `;
+        const qRes = await client.query(nonLotSql, [pId, locId]);
+        candidateQuants = qRes.rows;
+      }
+
+      const totalAvailable = candidateQuants.reduce((sum, q) => sum + parseFloat(q.available_quantity), 0);
+      if (totalAvailable < requestedQty) {
+        throw new AppError(
+          `Insufficient stock for product "${product.name}" (SKU: ${product.sku}). Requested: ${requestedQty}, Available at location: ${totalAvailable}.`,
+          400,
+          'INSUFFICIENT_STOCK'
+        );
+      }
+
+      let remainingToConsume = requestedQty;
+      for (const quant of candidateQuants) {
+        if (remainingToConsume <= 0) break;
+        const avail = parseFloat(quant.available_quantity);
+        const takeQty = Math.round(Math.min(avail, remainingToConsume) * 10000) / 10000;
+
+        // Deduct stock quant
+        await adjustQuant(client, {
+          productId: pId,
+          locationId: locId,
+          lotId: quant.lot_id,
+          deltaQuantity: -takeQty
+        });
+
+        // Create immutable stock move
+        await createStockMove(client, {
+          productId: pId,
+          lotId: quant.lot_id,
+          srcLocationId: locId,
+          destLocationId: null,
+          quantity: takeQty,
+          uomId: product.uom_id,
+          unitCost: parseFloat(product.cost_price || 0),
+          state: 'done',
+          moveType: 'delivery',
+          originDocument: delivery.reference,
+          performedBy: userId
+        });
+
+        // Deplete cost layers
+        await depleteCostLayers(client, {
+          productId: pId,
+          quantity: takeQty
+        });
+
+        allAllocations.push({
+          productId: pId,
+          productName: product.name,
+          sku: product.sku,
+          quantId: quant.quant_id,
+          lotId: quant.lot_id,
+          lotNumber: quant.lot_number || 'Non-Lot Tracked',
+          expiryDate: quant.expiry_date,
+          quantity: takeQty,
+          locationId: locId
+        });
+
+        remainingToConsume = Math.round((remainingToConsume - takeQty) * 10000) / 10000;
+      }
+
+      // Update line done_qty
+      await client.query(
+        'UPDATE delivery_lines SET done_qty = requested_qty WHERE id = $1',
+        [line.id]
+      );
+    }
+
+    // 4. Update delivery status to done
+    await client.query(
+      "UPDATE deliveries SET status = 'done', updated_at = NOW() WHERE id = $1",
+      [dId]
+    );
+
+    // 5. Audit Log
+    await logAudit({
+      userId,
+      action: 'VALIDATE',
+      entityType: 'deliveries',
+      entityId: delivery.id,
+      newValues: {
+        reference: delivery.reference,
+        customer: delivery.customer_name,
+        allocationsCount: allAllocations.length,
+        allocations: allAllocations.map(a => ({
+          sku: a.sku,
+          lot: a.lotNumber,
+          qty: a.quantity,
+          expiry: a.expiryDate
+        }))
+      },
+      ipAddress,
+      client
+    });
+
+    if (manageTx) await client.query('COMMIT');
+
+    return {
+      ...delivery,
+      status: 'done',
+      allocations: allAllocations
+    };
+  } catch (err) {
+    if (manageTx) await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    if (manageTx) client.release();
+  }
+}
+
 module.exports = {
   createDelivery,
   listDeliveries,
-  getDeliveryById
+  getDeliveryById,
+  processDelivery
 };

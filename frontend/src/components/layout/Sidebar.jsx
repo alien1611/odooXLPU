@@ -16,12 +16,18 @@ import {
   Warehouse,
   MapPin,
   Database,
-  Scan
+  Scan,
+  Layers,
+  ArrowUpRight,
+  Zap
 } from 'lucide-react';
 
 const operationItems = [
   { name: 'Dashboard', to: '/', icon: LayoutDashboard },
   { name: 'Mobile Scanner', to: '/warehouse/scanner', icon: Scan },
+  { name: 'Pick Waves', to: '/waves', icon: Layers },
+  { name: 'Bin Replenishment', to: '/replenishment', icon: ArrowUpRight },
+  { name: 'Cross-Docking', to: '/cross-dock', icon: Zap },
   { name: 'Inventory Quants', to: '/inventory', icon: Boxes },
   { name: 'Stock Moves (Ledger)', to: '/moves', icon: ArrowLeftRight },
   { name: 'Lots & FEFO Expiry', to: '/lots', icon: ShieldAlert },
