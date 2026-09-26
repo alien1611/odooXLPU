@@ -219,8 +219,4 @@ frontend is built — visuals land better than a table for a live judged demo.)*
 - [ ] Frontend (dashboard, forms, ledger view)
 - [ ] Seed data + demo rehearsal
 
-## Team
-
-| Name | Role |
-|------|------|
-| _add here_ | |
+*NOTE This is a demo Readme File of What I'm Building not Final.*
